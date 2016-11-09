@@ -1,0 +1,224 @@
+% THIS IS AN EXAMPLE DOCUMENT FOR VLDB 2012
+% based on ACM SIGPROC-SP.TEX VERSION 2.7
+% Modified by  Gerald Weber <gerald@cs.auckland.ac.nz>
+% Removed the requirement to include *bbl file in here. (AhmetSacan, Sep2012)
+% Fixed the equation on page 3 to prevent line overflow. (AhmetSacan, Sep2012)
+%\documentclass{acm_proc_article-sp}
+%\documentclass{sig-alternate}
+\documentclass{vldb}
+%\documentclass{sig-alternate-05-2015}
+% The following \documentclass options may be useful:
+
+% preprint      Remove this option only once the paper is in final form.
+% 10pt          To set in 10-point type instead of 9-point.
+% 11pt          To set in 11-point type instead of 9-point.
+% authoryear    To obtain author/year citation style instead of numeric.
+%\documentclass{vldb}
+\usepackage{graphicx}
+\usepackage{balance}  % for  \balance command ON LAST PAGE  (only there!)
+\usepackage{xspace}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{color}
+\usepackage{cite}
+\usepackage{subfigure}
+\usepackage{courier}
+\usepackage{enumitem}
+\usepackage{url}
+\setlist{nosep}
+\usepackage{atbegshi}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage[bottom]{footmisc}
+\usepackage[T1]{fontenc}
+\usepackage[11pt]{moresize}
+\hypersetup{
+  colorlinks,
+  linkcolor={magenta},
+  citecolor={blue},
+  urlcolor={magenta}
+}
+ \usepackage{setspace}
+ \usepackage{sidecap}
+
+%For title sections compression (following two lines)
+% \usepackage[compact]{titlesec}
+% \newcommand{\subparagraph}{}
+
+\makeatletter
+\renewcommand{\ALG@beginalgorithmic}{\small}
+\makeatother
+
+\let\Algorithm\algorithm
+\renewcommand\algorithm[1][]{\Algorithm[#1]\setstretch{1.05}}
+
+\newcommand{\mylabel}[2]{#2\def\@currentlabel{#2}\label{#1}}
+
+\renewcommand{\sectionautorefname}{\S}
+\renewcommand{\subsectionautorefname}{\S}
+\begin{document}
+
+% ****************** TITLE ****************************************
+
+\newtheorem{definition}{\scriptsize {\small D}EFINITION}
+\newtheorem{theorem}{\scriptsize {\small T}HEOREM}
+\newtheorem{lemma}{\scriptsize {\small T}HEOREM}
+\newcommand{\crossrec}{\textsc{X-Map}\xspace}
+\newcommand{\crossrecib}{\textsc{X-Map-ib}\xspace}
+\newcommand{\crossrecub}{\textsc{X-Map-ub}\xspace}
+\newcommand{\privcrossrec}{\textsc{PX-Map}\xspace}
+\newcommand{\npcrossrec}{\textsc{NX-Map}\xspace}
+\newcommand{\npcrossrecib}{\textsc{NX-Map-ib}\xspace}
+\newcommand{\npcrossrecub}{\textsc{NX-Map-ub}\xspace}
+\newcommand{\mixcrossrec}{\texttt{(\hspace{-0.5mm}P\hspace{-0.5mm})\hspace{-1mm}X-Map}\xspace}
+\newcommand{\graphsim}{\textsc{X-Sim}\xspace}
+\newcommand{\framework}{\textsc{X-Ware}\xspace}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\newcommand\Algphase[1]{%
+\vspace*{-.7\baselineskip}\Statex\hspace*{\dimexpr-\algorithmicindent-2pt\relax}\rule{0.48\textwidth}{0.4pt}%
+\Statex\hspace*{-\algorithmicindent}\textbf{#1}%
+\vspace*{-.7\baselineskip}\Statex\hspace*{\dimexpr-\algorithmicindent-2pt\relax}\rule{0.48\textwidth}{0.4pt}%
+}
+
+\setlength{\abovedisplayskip}{-0.8pt}
+\setlength{\belowdisplayskip}{-0.8pt}
+\setlength{\textfloatsep}{0pt}
+
+
+
+\title{What You Might Like To Read After Watching Interstellar}
+
+% possible, but not really needed or used for PVLDB:
+%\subtitle{[Extended Abstract]
+%\titlenote{A full version of this paper is available as\textit{Author's Guide to Preparing ACM SIG Proceedings Using \LaTeX$2_\epsilon$\ and BibTeX} at \texttt{www.acm.org/eaddress.htm}}}
+
+% ****************** AUTHORS **************************************
+
+% You need the command \numberofauthors to handle the 'placement
+% and alignment' of the authors beneath the title.
+%
+% For aesthetic reasons, we recommend 'three authors at a time'
+% i.e. three 'name/affiliation blocks' be placed beneath the title.
+%
+% NOTE: You are NOT restricted in how many 'rows' of
+% "name/affiliations" may appear. We just ask that you restrict
+% the number of 'columns' to three.
+%
+% Because of the available 'opening page real-estate'
+% we ask you to refrain from putting more than six authors
+% (two rows with three columns) beneath the article title.
+% More than six makes the first-page appear very cluttered indeed.
+%
+% Use the \alignauthor commands to handle the names
+% and affiliations for an 'aesthetic maximum' of six authors.
+% Add names, affiliations, addresses for
+% the seventh etc. author(s) as the argument for the
+% \additionalauthors command.
+% These 'additional authors' will be output/set for you
+% without further effort on your part as the last section in
+% the body of your article BEFORE References or any Appendices.
+
+%\numberofauthors{8} %  in this sample file, there are a *total*
+% of EIGHT authors. SIX appear on the 'first-page' (for formatting
+% reasons) and the remaining two appear in the \additionalauthors section.
+
+\numberofauthors{3} %  in this sample file, there are a *total*
+% of EIGHT authors. SIX appear on the 'first-page' (for formatting
+% reasons) and the remaining two appear in the \additionalauthors section.
+
+\author{
+% You can go ahead and credit any number of authors here,
+% e.g. one 'row of three' or two rows (consisting of one row of three
+% and a second row of one, two or three).
+%
+% The command \alignauthor (no curly braces needed) should
+% precede each author name, affiliation/snail-mail address and
+% e-mail address. Additionally, tag each line of
+% affiliation/address with \affaddr, and tag the
+% e-mail address with \email.
+%
+% 1st. author
+\alignauthor
+\hspace{-4mm}
+Rachid Guerraoui\\
+\hspace{-4mm}
+       \affaddr{EPFL}\\
+       \email{\hspace{-4mm}rachid.guerraoui@epfl.ch}
+% 2nd. author
+\alignauthor
+\hspace{-14mm}
+Anne-Marie Kermarrec\\
+\hspace{-14mm}
+       \affaddr{Inria}\\
+       \email{\hspace{-14mm}anne-marie.kermarrec\\\hspace{-14mm}@inria.fr}
+% 3rd. author
+\alignauthor 
+\hspace{-35mm}
+Tao Lin\\
+\hspace{-35mm}
+       \affaddr{EPFL}\\
+       \email{\hspace{-35mm}tao.lin@epfl.ch}
+%\and  % use '\and' if you need 'another row' of author names
+% 4th. author
+\alignauthor
+\hspace{-60mm}
+Rhicheek Patra\\
+\hspace{-60mm}
+       \affaddr{EPFL}\\
+       \email{\hspace{-60mm}rhicheek.patra@epfl.ch}
+       %\email{\hspace{-60mm}jean-ronan.vigouroux\\\hspace{-60mm}@technicolor.com}
+}
+
+%\titlenote{Authors appear in alphabetical order.}
+
+% There's nothing stopping you putting the seventh, eighth, etc.
+% author on the opening page (as the 'third row') but we ask,
+% for aesthetic reasons that you place these 'additional authors'
+% in the \additional authors block, viz.
+% Just remember to make sure that the TOTAL number of authors
+% is the number that will appear on the first page PLUS the
+% number that will appear in the \additionalauthors section.
+
+
+\maketitle
+
+
+
+\input{Abstract}
+\input{Introduction}
+\input{Background}
+\input{Similarity}
+\input{Recommendation_v1}
+\input{RecoArchitecture}
+\input{Evaluation}
+\input{RelWorks}
+\input{Conclusion}
+
+
+
+
+
+
+
+
+
+
+
+
+% The following two commands are all you need in the
+% initial runs of your .tex file to
+% produce the bibliography for the citations in your paper.
+\bibliographystyle{abbrv}
+{\scriptsize
+\bibliography{bib}}  % vldb_sample.bib is the name of the Bibliography in this case
+% You must have a proper ".bib" file
+%  and remember to run:
+% latex bibtex latex latex
+% to resolve all references
+
+%\subsection{References}
+%Generated by bibtex from your ~.bib file.  Run latex,
+%then bibtex, then latex twice (to resolve references).
+%\input{Appendix}
+\end{document}

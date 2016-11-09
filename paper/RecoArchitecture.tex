@@ -1,0 +1,41 @@
+\vspace{-2mm}
+\section{Implementation}
+\label{Implementation}
+In this section, we describe our implementation of \crossrec (as well as \npcrossrec). Figure~\ref{fig:XMap_Arch} outlines the four main components of our implementation: \emph{baseliner}, \emph{extender}, \emph{generator} and \emph{recommender}. We describe each of these components along with their functionality. Note that only the baseliner component remains same for \crossrec and \npcrossrec.
+
+\begin{figure}
+\begin{center}
+\includegraphics[height=1.8in,width=3.4in]{figures/X-Frame.png}
+\caption{{\bf The components of \crossrec: \emph{Baseliner, Extender, Generator, Recommender}.}}
+\vspace{-3mm}
+\label{fig:XMap_Arch}
+\end{center}
+\end{figure}
+
+%\subsection{Preprocessor}
+%The preprocessor partitions the data into \emph{training} and \emph{test} sets. The training set is used to build up the item-item network in \crossrec whereas the test set is used to evaluate the quality of the prediction provided by \crossrec.
+
+\subsection{Baseliner}
+The Baseliner computes the baseline similarities leveraging the adjusted cosine similarity (Equation~\ref{tau_ib_cf}) between the items in the two domains. It splits the item-pairs based on whether both the items belong to the same domain or not. If both items are from same domain, then the item-pair similarities will be delivered as \emph{homogeneous similarities}. If one of the items belongs to a different domain, then the item-pair similarities will be delivered as \emph{heterogeneous similarities}. The baseline heterogeneous similarities are computed based on the user overlap.\footnote{These are the baseline similarities without any extension or enhancements.}
+
+\subsection{Extender}
+This component extends the baseline similarities both within a domain and across domains. The items in each domain are divided into three layers based on our layer-based pruning technique as shown in Figure~\ref{fig:domcat}.
+For every specific layer of items, the extender computes the top-k for the neighboring layers. For instance, for the items in the BB-layer of $D^S$, the extender computes the top-k from items in the BB-layer in $D^T$ and also the top-k from the items in the NB-layer in $D^S$. 
+%Similarly, for the items in the NB-layer of $D^S$, the extender computes the top-k from the items in the BB-layer in $D^S$ and also the top-k from the items in the NN-layer in $D^S$. Finally, for the items in the NN-layer of $D^S$, the extender computes the top-k from the items in the NB-layer in $D^S$. We perform similar computations for the items in domain $D^T$.
+
+\noindent{\bf Intra-domain extension.} In this step, the extender computes the \graphsim similarity for the items in the NN-layer in $D^S$ and the items in the BB-layer of $D^S$ via the NB-layer items of $D^S$. Similar computations are performed for the domain $D^T$.
+
+\noindent{\bf Cross-domain extension.} After the previous step, the extender updates the NB and NN layers in both domains based on the new connections (top-$k$). Then, it updates the connections between the NB and BB layer items in one domain to the NB and BB category items in the other one.
+
+At the end of the execution of the extender, for every item $t_i$ in $D_S$, we get a set of items $I(t_i)$ in $D_T$ with some quantified (positive or negative) \graphsim values with $t_i$. 
+
+\subsection{Generator}
+The generator performs the following two computational steps.
+
+\noindent{\bf Item mapping.} The Generator maps every item in one domain (say $D^S$) to its most similar item (for \npcrossrec) or its private replacement (for \crossrec) in the other domain ($D^T$). After, the completion of this step, every item in one domain has a replacement item in the other domain.\footnote{Note that to have more diversity, we could also choose a set of replacements for an item in the target domain, based on the \graphsim metric. This however is out of the scope of this paper.}
+
+\noindent{\bf Mapped user profiles.} The Generator here creates an artificial profile (AlterEgo) of a user in a target domain $D_T$ from her actual profile in the source domain $D_S$ by replacing each item in her profile in $D^S$ with its replacement in $D^T$ as shown in Figure~\ref{fig:alterego}.  Finally, after this step, the Generator outputs the AlterEgo profile of a user in the target domain where she might have little or no activity yet.
+
+\subsection{Recommender}
+This component leverages this artificial AlterEgo profile created by the the Generator to perform the recommendation computation. It can implement any general recommendation algorithm for its underlying recommendation computation. In this paper, we implemented user-based and item-based CF schemes. For \npcrossrec, the recommender uses Algorithm~\ref{ub_cf} (user-based CF) or Algorithm~\ref{ib_cf} (item-based CF) in the target domain. For \crossrec, the recommender also uses the PNSA algorithm along with the PNCF algorithm to generate recommendations either in a user-based manner or in an item-based manner. Additionally, for both \npcrossrec and \crossrec, the item-based CF recommender leverages the temporal relevance to boost the recommendation quality.{\color{red}TALK ABOUT MF!}
+

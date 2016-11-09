@@ -1,0 +1,28 @@
+\begin{abstract}
+Recommenders are widely implemented nowadays by major e-commerce players like Netflix, Amazon or Last.fm. They typically make use of effective collaborative filtering schemes to select the most relevant items to suggest. However, most recommenders today are \emph{homogeneous}: they focus on a specific domain (e.g., either movies or books). In short, Alice will only get recommended a movie if she has been rating only movies. Clearly, the multiplicity of web applications is calling for \emph{heterogeneous} recommendations. Ideally, Alice should be able to get recommendations for books even if she has only rated movies.
+%Basically, Alice should be recommended books based on her past rating of movies and Bob should be recommended movies based on his past rating of books. 
+% Yet, heterogeneity opens new challenges for computing \emph{similarity}, protecting \emph{privacy} and ensuring \emph{scalability}.
+
+In this paper, we present \crossrec, a heterogeneous recommender addressing such issues. \crossrec relies on \graphsim, a novel meta path-based similarity where a \emph{meta path} is a path consisting of heterogeneous items (like movies, books). \graphsim computes the transitive closure of inter-item similarities over several domains based on users who rated across these domains. \graphsim is then used to generate a user profile (called \emph{AlterEgo}) for a domain where the user might not have any activity yet. Furthermore, information aggregation across multiple domains also increases the potential privacy risk for users. \crossrec employs differential privacy to address such privacy concerns.
+
+%We show how to do that, while ensuring differential privacy, and then generate relevant recommendations in that domain.
+% \crossrec applies an exponential technique to determine the probability of item selection and ensure differential privacy. scalability is ensured using a layer-based selection technique. 
+
+We present a comprehensive experimental evaluation of \crossrec using real traces from Amazon. Our evaluation shows that, in terms of recommendation quality, \crossrec outperforms alternative heterogeneous recommenders, and in terms of throughput, \crossrec scales linearly with increasing number of machines.
+
+
+%Our evaluation shows that \crossrec, without any privacy overhead, significantly outperforms alternative heterogeneous recommenders whereas it still provides slightly better quality than the alternatives with the additional privacy overhead. We also show that \crossrec delivers near-linear scalability with an increasing number of machines.
+
+
+\end{abstract}
+
+
+
+% A category with the (minimum) three required fields
+%\category{H.4}{Information Systems Applications}{Miscellaneous}
+%A category including the fourth, optional field follows...
+%\category{D.2.8}{Software Engineering}{Metrics}[complexity measures, performance measures]
+
+%\terms{Theory}
+
+%\keywords{ACM proceedings, \LaTeX, text tagging} % NOT required for Proceedings
