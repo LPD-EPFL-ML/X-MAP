@@ -1,0 +1,7 @@
+version: '2'
+services:
+    spark:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: itamtao/spark

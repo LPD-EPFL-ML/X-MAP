@@ -185,7 +185,7 @@ TSWLatexianTemp*
 *.ipynb_checkpoints*
 
 # data
-
+data*
 
 # dropbox
 *.dropbox
