@@ -4,4 +4,4 @@ MAINTAINER Tao Lin <itamtao@gmail.com>
 
 # create and switch user
 RUN useradd --create-home --shell /bin/zsh tlin
-RUN yum -y install git
+RUN yum -y install git numpy scipy
