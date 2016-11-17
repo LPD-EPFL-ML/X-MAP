@@ -231,8 +231,7 @@ class ItemBasedSim:
                 yield iid1, [(iid2, sim, mutu, frac_mutu)]
                 yield iid2, [(iid1, sim, mutu, frac_mutu)]
         return dataRDD.mapPartitions(
-            key_on_first_item).reduceByKey(
-            lambda a, b: a + b)
+            key_on_first_item).reduceByKey(lambda a, b: a + b)
 
     def build_sim_DF(self, sim_pairsRDD):
         """convert sim RDD to DataFrame."""
