@@ -116,7 +116,7 @@ if __name__ == '__main__':
     path_pickle_book = join(path_root, "cache/two_domain/clean_data/book")
 
     num_atleast_rating = 5
-    num_observation = 10000
+    num_observation = 66666
     date_from = 2012
     date_to = 2013
 
