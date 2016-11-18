@@ -5,6 +5,8 @@ from os.path import join
 
 from pyspark import SparkContext, SparkConf
 
+from auxiliary import split_data_pipeline
+
 
 class SplitData:
     def __init__(self, num_left, ratio_split, ratio_both, seed):
@@ -175,15 +177,9 @@ if __name__ == '__main__':
     sourceRDD, targetRDD = movieRDD, bookRDD
 
     split_data = SplitData(num_left, ratio_split, ratio_both, seed)
-    overlap_userRDD = split_data.find_overlap_user(sourceRDD, targetRDD)
-    overlap_userRDD_bd = sc.broadcast(overlap_userRDD.collect())
 
-    non_overlap_sourceRDD, overlap_sourceRDD, \
-        non_overlap_targetRDD, overlap_targetRDD = split_data.distinguish_data(
-            overlap_userRDD_bd, sourceRDD, targetRDD)
-    training_dataRDD, test_dataRDD = split_data.split_data(
-        non_overlap_sourceRDD, overlap_sourceRDD,
-        non_overlap_targetRDD, overlap_targetRDD)
+    training_dataRDD, test_dataRDD = split_data_pipeline(
+        sc, split_data, sourceRDD, targetRDD)
 
     training_dataRDD.saveAsPickleFile(path_pickle_train)
     test_dataRDD.saveAsPickleFile(path_pickle_test)

@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 """A function used to extend the baseline similarity."""
+from os.path import join
 from functools import reduce
 
 import numpy as np
+
+from pyspark import SparkContext, SparkConf
+from pyspark.sql import SQLContext
+
+from itemBasedSim import ItemBasedSim
+from auxiliary import extender_pipeline
 
 
 class ExtendSim:
@@ -218,3 +225,32 @@ class ExtendSim:
 
         return cross_extended.flatMap(lambda x: x).map(swap_info).reduceByKey(
             lambda a, b: a + b).mapPartitions(merge)
+
+
+if __name__ == '__main__':
+    # define spark function.
+    myconf = SparkConf().setAppName(
+        "xmap recommendation: baseline sim components")
+    sc = SparkContext(conf=myconf)
+    sqlContext = SQLContext(sc)
+
+    # define parameters.
+    path_root = "file:/home/tlin/notebooks/data"
+    path_pickle_train = join(path_root, "cache/two_domain/split_data/train")
+    path_pickle_test = join(path_root, "cache/two_domain/split_data/test")
+    path_pickle_baseline_sim = join(
+        path_root, "cache/two_domain/item_based_sim/base_sim")
+    path_pickle_extended_sim = join(
+        path_root, "cache/two_domain/item_based_sim/base_sim")
+
+    # A demo for the class.
+    itemsim = ItemBasedSim(method='ad_cos', num_atleast=50)
+    extendsim = ExtendSim(top_k=10)
+
+    testRDD = sc.pickleFile(path_pickle_test)
+    item2item_simRDD = sc.pickleFile(path_pickle_baseline_sim)
+
+    final_extended_sim = extender_pipeline(
+            sc, sqlContext, itemsim, extendsim, item2item_simRDD)
+
+    final_extended_sim.saveAsPickleFile(path_pickle_extended_sim)

@@ -127,6 +127,7 @@ if __name__ == '__main__':
     clean_target_tool = CleanData(
         num_atleast_rating, num_observation,
         date_from, date_to, domain_label="T:")
+
     cleaned_movieRDD = clean_data_pipeline(
         sc, clean_source_tool, path_raw_movie)
     cleaned_bookRDD = clean_data_pipeline(

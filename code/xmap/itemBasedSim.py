@@ -7,7 +7,9 @@ from itertools import combinations
 import numpy as np
 
 from pyspark import SparkContext, SparkConf
-from pyspark.sql import Row, SQLContext
+from pyspark.sql import Row
+
+from auxiliary import itembasedsim_pipeline
 
 
 class ItemBasedSim:
@@ -265,14 +267,8 @@ if __name__ == '__main__':
     trainRDD = sc.pickleFile(path_pickle_train)
     testRDD = sc.pickleFile(path_pickle_test)
 
-    itemsim = ItemBasedSim(method='cosine', num_atleast=50)
-    universal_user_info = itemsim.get_universal_user_info(trainRDD)
-    user_info = sc.broadcast(universal_user_info.collectAsMap())
+    itemsim = ItemBasedSim(method='ad_cos', num_atleast=50)
 
-    universal_item_info = itemsim.get_universal_item_info(trainRDD, user_info)
-    item_info = sc.broadcast(universal_item_info.collectAsMap())
-
-    item2item_simRDD = itemsim.calculate_item2item_sim(
-        trainRDD, item_info, user_info).cache()
+    item2item_simRDD = itembasedsim_pipeline(sc, itemsim, trainRDD)
 
     item2item_simRDD.saveAsPickleFile(path_pickle_baseline_sim)
