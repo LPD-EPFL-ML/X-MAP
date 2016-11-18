@@ -4,6 +4,7 @@ from functools import reduce
 
 import numpy as np
 
+
 class ExtendSim:
     def __init__(self, top_k):
         """
@@ -82,49 +83,72 @@ class ExtendSim:
                             yield (iid, v), line
             return rdd.mapPartitions(helper)
 
-        def final_extend(joined_BB):
-            def calculate_path_confidence(sim_info, mutu_info, frac_mutu):
-                """calculate the confidence of the path."""
-                denominator = sum([a * b for a, b in zip(sim_info, mutu_info)])
-                numerator = sum(mutu_info)
-                s_p = 1.0 * denominator / numerator if numerator else 0.0
-                c_p = reduce(lambda a, b: a * b, frac_mutu)
-                return s_p, c_p
+        def calculate_path_confidence(sim_info, mutu_info, frac_mutu):
+            """calculate the confidence of the path."""
+            denominator = sum([a * b for a, b in zip(sim_info, mutu_info)])
+            numerator = sum(mutu_info)
+            s_p = 1.0 * denominator / numerator if numerator else 0.0
+            c_p = reduce(lambda a, b: a * b, frac_mutu)
+            return s_p, c_p
 
-            def get_final_sim(paths):
-                final_score = []
-                local_db = {}
-                knn_BB_iids = knn_BB_bd.value.keys()
-                knn_NB_iids = knn_NB_bd.value.keys()
-                for path in paths:
-                    iid_pairs = zip(path[0: len(path) - 1], path[1: len(path)])
-                    tmp_info = []
-                    for iid1, iid2 in iid_pairs:
-                        if (iid1, iid2) not in local_db.keys():
-                            if iid1 in knn_BB_iids \
-                                    and iid2 in knn_BB_bd.value[iid1]:
-                                tmp = knn_BB_bd.value[iid1][iid2]
-                            elif iid1 in knn_BB_iids \
-                                    and iid1 in knn_BB_bd.value[iid2]:
-                                tmp = knn_BB_bd.value[iid2][iid1]
-                            elif iid1 in knn_NB_iids \
-                                    and iid2 in knn_NB_bd.value[iid1]:
-                                tmp = knn_NB_bd.value[iid1][iid2]
-                            elif iid2 in knn_NB_iids \
-                                    and iid1 in knn_NB_bd.value[iid2]:
-                                tmp = knn_NB_bd.value[iid2][iid1]
-                            local_db.update({(iid1, iid2): tmp})
-                        tmp_info += [local_db[(iid1, iid2)]]
-                    sim_info = [l[0] for l in tmp_info]
-                    mutu_info = [l[1] for l in tmp_info]
-                    frac_mutu = [l[2] for l in tmp_info]
-                    final_score.append(
-                        (path[0], path[-1]), calculate_path_confidence(
-                            sim_info, mutu_info, frac_mutu))
-                return final_score
+        def get_final_sim(paths):
+            final_score = []
+            local_db = {}
+            knn_BB_iids = knn_BB_bd.value.keys()
+            knn_NB_iids = knn_NB_bd.value.keys()
+            for path in paths:
+                iid_pairs = zip(path[0: len(path) - 1], path[1: len(path)])
+                tmp_info = []
+                for iid1, iid2 in iid_pairs:
+                    if (iid1, iid2) not in local_db.keys():
+                        if iid1 in knn_BB_iids \
+                                and iid2 in knn_BB_bd.value[iid1]:
+                            tmp = knn_BB_bd.value[iid1][iid2]
+                        elif iid2 in knn_BB_iids \
+                                and iid1 in knn_BB_bd.value[iid2]:
+                            tmp = knn_BB_bd.value[iid2][iid1]
+                        elif iid1 in knn_NB_iids \
+                                and iid2 in knn_NB_bd.value[iid1]:
+                            tmp = knn_NB_bd.value[iid1][iid2]
+                        elif iid2 in knn_NB_iids \
+                                and iid1 in knn_NB_bd.value[iid2]:
+                            tmp = knn_NB_bd.value[iid2][iid1]
+                        local_db.update({(iid1, iid2): tmp})
+                    tmp_info += [local_db[(iid1, iid2)]]
+                sim_info = [l[0] for l in tmp_info]
+                mutu_info = [l[1] for l in tmp_info]
+                frac_mutu = [l[2] for l in tmp_info]
+                final_score.append(
+                    ((path[0], path[-1]),
+                     calculate_path_confidence(sim_info, mutu_info, frac_mutu))
+                    )
+            return final_score
 
+        def final_nonjoint_extend(nonjoint_BB):
+            """extend path for items that only linked to BB_target.
+            arg:
+                nonjoint_BB: (target_iid, source_iid), source_info
+            """
             def helper(iter_items):
-                for (iid_pair, (source, target)) in iter_items:
+                for iid_pair, source in iter_items:
+                    """iid_pair in the form of (target_iid, source_iid).
+                    source_path: from BB_target to item in source domain.
+                    """
+                    source_path = [iid_pair]
+                    for NB_iid, NN_iids in source:
+                        source_path += [iid_pair + (NB_iid,)]
+                        for NN_iid in NN_iids:
+                            source_path += [iid_pair + (NB_iid, NN_iid)]
+                    yield get_final_sim(source_path)
+            return nonjoint_BB.mapPartitions(helper)
+
+        def final_joint_extend(joined_BB):
+            """extend path for items that have additional items in each domain.
+            arg:
+                joined_BB: (target_iid, source_iid), (source_info, target_info)
+            """
+            def helper(iter_items):
+                for iid_pair, (source, target) in iter_items:
                     """iid_pair in the form of (target_iid, source_iid).
                     source_path: from BB_target to item in source domain.
                     target_path: from NB_target to item in source domain.
@@ -135,7 +159,6 @@ class ExtendSim:
                         source_path += [iid_pair + (NB_iid,)]
                         for NN_iid in NN_iids:
                             source_path += [iid_pair + (NB_iid, NN_iid)]
-                    yield get_final_sim(source_path)
 
                     for NB_iid, NN_iids in target:
                         target_path = []
@@ -156,7 +179,10 @@ class ExtendSim:
         extended_BB_source = extend_BB_source(BB_other_intra_source)
         extended_BB_target = extend_BB_target(BB_other_intra_target)
         joined_extended_BB = extended_BB_source.join(extended_BB_target)
-        return final_extend(joined_extended_BB)
+        final_joint_extended = final_joint_extend(joined_extended_BB)
+        final_nonjoint_extended = final_nonjoint_extend(extended_BB_source)
+
+        return final_joint_extended.union(final_nonjoint_extended)
 
     def get_final_extension(self, cross_extended):
         """Deal with the case of multiple path among an item-item pair.
@@ -190,5 +216,5 @@ class ExtendSim:
                     final_sim.append((key, get_sim(local_db[key])))
                 yield iid, final_sim
 
-        return cross_extended.flatMap(swap_info).reduceByKey(
+        return cross_extended.flatMap(lambda x: x).map(swap_info).reduceByKey(
             lambda a, b: a + b).mapPartitions(merge)
