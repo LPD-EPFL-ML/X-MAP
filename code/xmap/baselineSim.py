@@ -261,7 +261,7 @@ if __name__ == '__main__':
     path_pickle_train = join(path_root, "cache/two_domain/split_data/train")
     path_pickle_test = join(path_root, "cache/two_domain/split_data/test")
     path_pickle_baseline_sim = join(
-        path_root, "cache/two_domain/item_based_sim/base_sim")
+        path_root, "cache/two_domain/baseline_sim/basesim")
 
     # A demo for the class.
     trainRDD = sc.pickleFile(path_pickle_train)

@@ -239,9 +239,9 @@ if __name__ == '__main__':
     path_pickle_train = join(path_root, "cache/two_domain/split_data/train")
     path_pickle_test = join(path_root, "cache/two_domain/split_data/test")
     path_pickle_baseline_sim = join(
-        path_root, "cache/two_domain/item_based_sim/base_sim")
+        path_root, "cache/two_domain/baseline_sim/basesim")
     path_pickle_extended_sim = join(
-        path_root, "cache/two_domain/item_based_sim/base_sim")
+        path_root, "cache/two_domain/extend_sim/extendsim")
 
     # A demo for the class.
     itemsim = ItemBasedSim(method='ad_cos', num_atleast=50)

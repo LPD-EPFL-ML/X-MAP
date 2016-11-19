@@ -47,7 +47,7 @@ class CrossSim:
             lambda line: line is not None)
         return flatRDD.filter(lambda line: "T:" in line[1]).union(alterEgo_profile)
 
-    def getInfo(self, formatedRDD):
+    def get_info(self, formatedRDD):
         """get the information of RDD. It can be either information of item/user. Below is an example of user information.
         Args:
             formatedRDD:    A formated RDD.
