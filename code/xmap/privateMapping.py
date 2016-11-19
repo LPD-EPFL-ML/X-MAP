@@ -89,12 +89,12 @@ class PrivateMapping:
                 yield iid, choice
         return rdd.mapPartitions(helper)
 
-    def crossNonPrivateMapping(self, rdd, topn=4):
+    def cross_nonprivate_mapping(self, rdd, topn=4):
         """get current items' mapping item based on its neighborhood.
         arg:
-        topn: random select one item among top `topn` item.
-            In non-private version, we first sort similarity,
-            and then select top `topn` items, then randomly select one item.
+            topn: random select one item among top `topn` item.
+                In non-private version, we first sort similarity,
+                and then select top `topn` items, then randomly select one item
         """
         def helper(iter_items):
             for iid, pairs in iter_items:
