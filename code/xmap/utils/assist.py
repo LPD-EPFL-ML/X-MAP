@@ -114,6 +114,41 @@ def private_mapping_pipeline(privatemap_tool, extended_simRDD, private):
     return mappedRDD, map_to_dict(mappedRDD)
 
 
+def crosssim_pipeline(sc, cross_sim_tool, training_dataRDD, mapped_sim):
+    """a pipeline to calculate crosssim in target domain."""
+    mapped_sim_dict = map_to_dict(mapped_sim)
+    alterEgo_profile = cross_sim_tool.build_alterEgo(
+        training_dataRDD, mapped_sim_dict).cache()
+
+    user_based_alterEgo = cross_sim_tool.build_sthbased_profile(
+        alterEgo_profile, "user").cache()
+    item_based_alterEgo = cross_sim_tool.build_sthbased_profile(
+        alterEgo_profile, "item").cache()
+    user_based_dict_bd = sc.broadcast(user_based_alterEgo.collectAsMap())
+    item_based_dict_bd = sc.broadcast(item_based_alterEgo.collectAsMap())
+
+    user_info = cross_sim_tool.get_info(user_based_alterEgo)
+    item_info = cross_sim_tool.get_info(item_based_alterEgo)
+
+    user_info_bd = sc.broadcast(user_info.collectAsMap())
+    item_info_bd = sc.broadcast(item_info.collectAsMap())
+
+    targetdomain_sim = cross_sim_tool.calculate_sim(
+        item_based_alterEgo, user_based_alterEgo,
+        item_info_bd, user_info_bd).cache()
+
+    return user_based_alterEgo, item_based_alterEgo, \
+        user_based_dict_bd, item_based_dict_bd, \
+        user_info_bd, item_info_bd, targetdomain_sim
+
+
 def map_to_dict(rdd):
-    """For a rdd, map it from list to dict."""
-    return dict(rdd.collect())
+    """For a rdd, map it from list to dict.
+    return:
+        {source item: target item}
+    """
+    return dict((line[1], line[0]) for line in rdd.collect())
+
+
+def convertToList(items, chunk):
+    return zip(*[iter(items)]*chunk)

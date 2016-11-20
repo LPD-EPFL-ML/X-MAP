@@ -14,9 +14,6 @@ class BaselineSim:
         self.method = method
         self.num_atleast = num_atleast
 
-    def convertToList(self, items, chunk):
-        return zip(*[iter(items)]*chunk)
-
     def get_universal_user_info(self, dataRDD):
         """get the user information of RDD.
         Args:
@@ -124,14 +121,15 @@ class BaselineSim:
         Returns:
             (item1, item2), (cosine_sim, mutu, frac_mutu)
         """
+        iid1, iid2 = item_pair
         pair_xy = [
             1.0 * rating_pair[0] * rating_pair[1]
             for rating_pair in rating_pairs]
 
         num_overlap_rating = len(pair_xy)
         inner_product = sum(pair_xy)
-        norm_x = item_info.value[item_pair[0]][1]
-        norm_y = item_info.value[item_pair[1]][1]
+        norm_x = item_info.value[iid1][1]
+        norm_y = item_info.value[iid2][1]
 
         cos_sim = self.significance_weighting(
             self.cosine(inner_product, norm_x * norm_y), num_overlap_rating)
@@ -139,8 +137,8 @@ class BaselineSim:
         mutu = self.retrieve_path_info(
             item_pair, rating_pairs, item_info)
         frac_mutu = 1.0 * mutu / (
-            item_info.value[item_pair[0]][3] +
-            item_info.value[item_pair[1]][3] - num_overlap_rating)
+            item_info.value[iid1][3] +
+            item_info.value[iid2][3] - num_overlap_rating)
         return item_pair, (cos_sim, mutu, frac_mutu)
 
     def calculate_adjusted_cosine_sim(
@@ -154,6 +152,7 @@ class BaselineSim:
         Returns:
             (item1, item2), (cosine_sim, mutu, frac_mutu)
         """
+        iid1, iid2 = item_pair
         rating_x = np.array([rating_pair[0] for rating_pair in rating_pairs])
         rating_y = np.array([rating_pair[1] for rating_pair in rating_pairs])
         average = np.array([user_info.value[rating_pair[2]][0]
@@ -161,16 +160,16 @@ class BaselineSim:
 
         num_overlap_rating = len(average)
         inner_product = np.sum((rating_x - average) * (rating_y - average))
-        norm_x = item_info.value[item_pair[0]][2]
-        norm_y = item_info.value[item_pair[1]][2]
+        norm_x = item_info.value[iid1][2]
+        norm_y = item_info.value[iid2][2]
 
         ad_cos_sim = self.significance_weighting(
             self.cosine(inner_product, norm_x * norm_y), num_overlap_rating)
 
         mutu = self.retrieve_path_info(item_pair, rating_pairs, item_info)
         frac_mutu = 1.0 * mutu / (
-            item_info.value[item_pair[0]][3] +
-            item_info.value[item_pair[1]][3] - num_overlap_rating)
+            item_info.value[iid1][3] +
+            item_info.value[iid2][3] - num_overlap_rating)
         return item_pair, (ad_cos_sim, mutu, frac_mutu)
 
     def produce_pairwise_items(self, dataRDD):

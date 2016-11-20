@@ -86,7 +86,7 @@ class PrivateMapping:
                     num_selection)
                 choice = np.take(
                     list(map(lambda l: l[0], normalized_prob_pairs)),
-                    index_choice)[0]
+                    index_choice)
                 yield iid, choice
         return rdd.mapPartitions(helper)
 

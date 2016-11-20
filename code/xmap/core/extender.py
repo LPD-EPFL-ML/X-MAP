@@ -13,9 +13,6 @@ class ExtendSim:
         """
         self.top_k = top_k
 
-    def convert_to_list(self, items, chunk):
-        return zip(*[iter(items)]*chunk)
-
     def find_knn_items(self, rdd, BB_items_bd):
         """return valid item information.
         arg:

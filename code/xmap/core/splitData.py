@@ -3,7 +3,6 @@
 import random
 
 
-
 class SplitData:
     def __init__(self, num_left, ratio_split, ratio_both, seed):
         """ Initialize parameter.
