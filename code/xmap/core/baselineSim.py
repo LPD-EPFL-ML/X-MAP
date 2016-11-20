@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 """A class to calculate similarity between items."""
 from math import sqrt
-from os.path import join
 from itertools import combinations
 
 import numpy as np
 
-from pyspark import SparkContext, SparkConf
 from pyspark.sql import Row
 
-from auxiliary import itembasedsim_pipeline
 
-
-class ItemBasedSim:
+class BaselineSim:
     def __init__(self, method, num_atleast):
         """Initialize parameter."""
         self.method = method
@@ -248,27 +244,3 @@ class ItemBasedSim:
                         sim=float(info[0]), mutu=info[1],
                         frac_mutu=float(info[2]), label=info[3])]
         return sim_pairsRDD.flatMap(helper).toDF()
-
-
-if __name__ == '__main__':
-    # define spark function.
-    myconf = SparkConf().setAppName(
-        "xmap recommendation: baseline sim components")
-    sc = SparkContext(conf=myconf)
-
-    # define parameters.
-    path_root = "file:/home/tlin/notebooks/data"
-    path_pickle_train = join(path_root, "cache/two_domain/split_data/train")
-    path_pickle_test = join(path_root, "cache/two_domain/split_data/test")
-    path_pickle_baseline_sim = join(
-        path_root, "cache/two_domain/baseline_sim/basesim")
-
-    # A demo for the class.
-    trainRDD = sc.pickleFile(path_pickle_train)
-    testRDD = sc.pickleFile(path_pickle_test)
-
-    itemsim = ItemBasedSim(method='ad_cos', num_atleast=50)
-
-    item2item_simRDD = itembasedsim_pipeline(sc, itemsim, trainRDD)
-
-    item2item_simRDD.saveAsPickleFile(path_pickle_baseline_sim)

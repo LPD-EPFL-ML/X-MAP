@@ -187,5 +187,10 @@ TSWLatexianTemp*
 # data
 data*
 
+# package build.
+xmap.egg-info*
+build*
+dist*
+
 # dropbox
 *.dropbox
