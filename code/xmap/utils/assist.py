@@ -98,3 +98,22 @@ def extract_siminfo(sc, classfied_items):
     knn_BB_bd = sc.broadcast(BB_items_knn)
     knn_NB_bd = sc.broadcast(NB_items_knn)
     return BB_info, NB_info, knn_BB_bd, knn_NB_bd
+
+
+def private_mapping_pipeline(privatemap_tool, extended_simRDD, private):
+    """a pipeline to private map item.
+    args:
+        private: boolean value.
+    """
+    if private:
+        mappedRDD = privatemap_tool.cross_private_mapping(
+            extended_simRDD)
+    else:
+        mappedRDD = privatemap_tool.cross_nonprivate_mapping(
+            extended_simRDD)
+    return mappedRDD, map_to_dict(mappedRDD)
+
+
+def map_to_dict(rdd):
+    """For a rdd, map it from list to dict."""
+    return dict(rdd.collect())

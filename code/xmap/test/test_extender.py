@@ -13,7 +13,7 @@ from xmap.utils.assist import extender_pipeline
 if __name__ == '__main__':
     # define spark function.
     myconf = SparkConf().setAppName(
-        "xmap recommendation: baseline sim components")
+        "xmap recommendation: extender sim components")
     sc = SparkContext(conf=myconf)
     sqlContext = SQLContext(sc)
 

@@ -12,7 +12,10 @@ from xmap.utils.assist import itembasedsim_pipeline
 if __name__ == '__main__':
     # define spark function.
     myconf = SparkConf().setAppName(
-        "xmap recommendation: baseline sim components")
+        "xmap recommendation: baseline sim components").set(
+        "spark.driver.maxResultSize", "1g").set(
+        "spark.python.worker.memory", "2g")
+
     sc = SparkContext(conf=myconf)
 
     # define parameters.

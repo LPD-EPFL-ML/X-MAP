@@ -1,1 +1,1 @@
-docker run -it -v "$(pwd):/home/tlin/notebooks" itamtao/spark bash
+docker run -d -p 8888:8888 -v "$(pwd):/home/tlin/notebooks" itamtao/spark
