@@ -35,9 +35,9 @@ class PrivateMapping:
                     k: number of neighbor that we want to select.
                     pairs: normalized probabilities pairs
                 """
-                num_nnz = np.count_nonzero(map(lambda line: line[1], lines))
+                nnz = np.count_nonzero(map(lambda line: line[1], lines))
                 return self.mapping_range \
-                    if num_nnz >= self.mapping_range else num_nnz
+                    if nnz >= self.mapping_range else nnz
 
             def calculate_prob(lines, replacement_selection_list):
                 """calculate probability (not normalized)."""

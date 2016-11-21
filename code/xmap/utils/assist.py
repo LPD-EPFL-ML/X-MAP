@@ -142,6 +142,22 @@ def crosssim_pipeline(sc, cross_sim_tool, training_dataRDD, mapped_sim):
         user_info_bd, item_info_bd, targetdomain_sim
 
 
+def private_policy_pipeline(policy_tool, alterEgo_sim, policy_method):
+    """a pipeline that apply private policy on alterEgo profile."""
+    if policy_method == "PSA":
+        private_neighbor = policy_tool.private_neighbor_selection(
+            alterEgo_sim)
+        noise_perturbed = policy_tool.noise_perturbation(
+            private_neighbor)
+        return noise_perturbed
+    else:
+        no_private_neighbor = policy_tool.nonprivate_neighbor_selection(
+            alterEgo_sim)
+        no_noise_perturbed = policy_tool.nonnoise_perturbation(
+            no_private_neighbor)
+        return no_noise_perturbed
+
+
 def map_to_dict(rdd):
     """For a rdd, map it from list to dict.
     return:

@@ -33,7 +33,7 @@ if __name__ == '__main__':
         path_root, "cache/two_domain/cross_sim/user_based_alterEgo")
     path_pickle_itembased_alterEgo = join(
         path_root, "cache/two_domain/cross_sim/item_based_alterEgo")
-    path_pickle_targetdomain_sim = join(
+    path_pickle_alterEgo_sim = join(
         path_root, "cache/two_domain/cross_sim/targetdomain_sim")
 
     # load data.
@@ -52,4 +52,4 @@ if __name__ == '__main__':
 
     user_based_alterEgo.saveAsPickleFile(path_pickle_userbased_alterEgo)
     item_based_alterEgo.saveAsPickleFile(path_pickle_itembased_alterEgo)
-    targetdomain_sim.saveAsPickleFile(path_pickle_targetdomain_sim)
+    targetdomain_sim.saveAsPickleFile(path_pickle_alterEgo_sim)
