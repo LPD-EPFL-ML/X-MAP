@@ -67,15 +67,16 @@ class Recommendation:
 
     def user_based_recommendation(
             self, test_dataRDD,
-            user_based_dict_bd, sim_pair_dict_bd, user_info_bd):
+            user_based_dict_bd, userbased_sim_pair_dict_bd, user_info_bd):
         """user-based recommendation.
             For privacy protection purpose, no decay rate is allowed.
         """
-        sim_pair_dict_keys = set(sim_pair_dict_bd.value.keys())
+        sim_pair_dict_keys = set(userbased_sim_pair_dict_bd.value.keys())
         return test_dataRDD.filter(
             lambda line: line[0] in sim_pair_dict_keys).map(
             lambda line: self.user_based_prediction(
-                line, user_based_dict_bd, sim_pair_dict_bd, user_info_bd))
+                line, user_based_dict_bd,
+                userbased_sim_pair_dict_bd, user_info_bd))
 
     def item_based_prediction(self, line, rating_bd, sim_bd, item_bd):
         """predict the rating of item for a specific user.
@@ -94,7 +95,7 @@ class Recommendation:
             pairs = sorted(pairs, key=lambda line: line[2], reverse=False)
             order = 0
             out = []
-            for i in xrange(len(pairs)):
+            for i in range(len(pairs)):
                 if i != 0 and pairs[i][2] == pairs[i - 1][2]:
                     out += [(pairs[i][0], pairs[i][1], order)]
                 else:
@@ -157,13 +158,14 @@ class Recommendation:
 
     def item_based_recommendation(
             self, test_dataRDD,
-            item_based_dict_bd, sim_pair_dict_bd, item_info_bd):
+            item_based_dict_bd, itembased_sim_pair_dict_bd, item_info_bd):
         """item-based Recommendation.
             it calculate rating with decay rate as well as without decay rate.
         """
         return test_dataRDD.map(
             lambda line: self.item_based_prediction(
-                line, item_based_dict_bd, sim_pair_dict_bd, item_info_bd))
+                line, item_based_dict_bd,
+                itembased_sim_pair_dict_bd, item_info_bd))
 
     def calculate_mae(self, rdd):
         """calculate MAE."""
@@ -171,17 +173,19 @@ class Recommendation:
             uid, pairs = line
             return uid, [
                 abs(pair[1] - pair[index]) for pair in pairs if pair is not ()]
+
         if "user" in self.method:
             result = rdd.map(helper).map(
                 lambda line: np.array([sum(line[1]), len(line[1])])).reduce(
                 lambda a, b: a + b)
-            return str(result[0] / result[1])
+            to_return = str(result[0] / result[1])
         else:
             nodelay_result = rdd.map(helper).map(
                 lambda line: np.array([sum(line[1]), len(line[1])])).reduce(
                 lambda a, b: a + b)
-            delay_result = rdd.map(lambda line: helper(line, index=3).map(
+            delay_result = rdd.map(lambda line: helper(line, index=3)).map(
                 lambda line: np.array([sum(line[1]), len(line[1])])).reduce(
                 lambda a, b: a + b)
-            return str(nodelay_result[0] / nodelay_result[1]) + "; " + \
-                str(delay_result[0] / delay_result[1])
+            to_return = str(1.0 * nodelay_result[0] / nodelay_result[1]) \
+                + '; ' + str(delay_result[0] / delay_result[1])
+        return to_return

@@ -168,3 +168,9 @@ def map_to_dict(rdd):
 
 def convertToList(items, chunk):
     return zip(*[iter(items)]*chunk)
+
+
+def write_txt(data, out_path, type="wb"):
+    """write the data to the txt file."""
+    with open(out_path, type) as f:
+        f.write(data.encode("utf-8"))
