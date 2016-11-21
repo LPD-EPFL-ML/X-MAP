@@ -33,13 +33,16 @@ if __name__ == '__main__':
         path_root, "cache/two_domain/cross_sim/user_based_alterEgo")
     path_pickle_itembased_alterEgo = join(
         path_root, "cache/two_domain/cross_sim/item_based_alterEgo")
-    path_pickle_alterEgo_sim = join(
-        path_root, "cache/two_domain/cross_sim/targetdomain_sim")
+    path_pickle_alterEgo_userbased_sim = join(
+        path_root, "cache/two_domain/cross_sim/targetdomain_userbased_sim")
+    path_pickle_alterEgo_itembased_sim = join(
+        path_root, "cache/two_domain/cross_sim/targetdomain_itembased_sim")
 
     # load data.
     training_dataRDD = sc.pickleFile(path_pickle_train).cache()
     private_mapped_sim = sc.pickleFile(path_pickle_private_mapped_sim)
 
+    # for user based.
     # init class
     cross_sim = CrossSim(method='cosine_user', num_atleast=50)
 
@@ -52,4 +55,14 @@ if __name__ == '__main__':
 
     user_based_alterEgo.saveAsPickleFile(path_pickle_userbased_alterEgo)
     item_based_alterEgo.saveAsPickleFile(path_pickle_itembased_alterEgo)
-    targetdomain_sim.saveAsPickleFile(path_pickle_alterEgo_sim)
+    targetdomain_sim.saveAsPickleFile(path_pickle_alterEgo_userbased_sim)
+
+    # for item based.
+    # init class
+    cross_sim = CrossSim(method='cosine_item', num_atleast=50)
+
+    # start
+    targetdomain_sim = cross_sim.calculate_sim(
+        item_based_alterEgo, user_based_alterEgo,
+        item_info_bd, user_info_bd)
+    targetdomain_sim.saveAsPickleFile(path_pickle_alterEgo_itembased_sim)

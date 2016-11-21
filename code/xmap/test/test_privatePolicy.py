@@ -34,17 +34,21 @@ if __name__ == '__main__':
         path_root, "cache/two_domain/cross_sim/user_based_alterEgo")
     path_pickle_itembased_alterEgo = join(
         path_root, "cache/two_domain/cross_sim/item_based_alterEgo")
-    path_pickle_alterEgo_sim = join(
-        path_root, "cache/two_domain/cross_sim/targetdomain_sim")
-    path_pickle_private_policy_sim = join(
-        path_root, "cache/two_domain/private_policy/policy_sim")
+    path_pickle_alterEgo_userbased_sim = join(
+        path_root, "cache/two_domain/cross_sim/targetdomain_userbased_sim")
+    path_pickle_alterEgo_itembased_sim = join(
+        path_root, "cache/two_domain/cross_sim/targetdomain_itembased_sim")
+    path_pickle_private_policy_userbased_sim = join(
+        path_root, "cache/two_domain/policy/policy_userbased_sim")
+    path_pickle_private_policy_itembased_sim = join(
+        path_root, "cache/two_domain/policy/policy_itembased_sim")
 
     # init class.
     private_policy = PrivatePolicy(
         mapping_range=10, privacy_epsilon=0.6, rpo=0.1)
 
-    # load data.
-    alterEgo_sim = sc.pickleFile(path_pickle_alterEgo_sim).cache()
+    # load user based data.
+    alterEgo_sim = sc.pickleFile(path_pickle_alterEgo_userbased_sim).cache()
     item_based_alterEgo = sc.pickleFile(path_pickle_itembased_alterEgo).cache()
     user_based_alterEgo = sc.pickleFile(path_pickle_userbased_alterEgo).cache()
 
@@ -55,5 +59,20 @@ if __name__ == '__main__':
     policy_method = "PSA"
     private_policy_sim = private_policy_pipeline(
         private_policy, alterEgo_sim, policy_method)
+    private_policy_sim.saveAsPickleFile(
+        path_pickle_private_policy_userbased_sim)
 
-    private_policy_sim.saveAsPickleFile(path_pickle_private_policy_sim)
+    # load item based data.
+    alterEgo_sim = sc.pickleFile(path_pickle_alterEgo_itembased_sim).cache()
+    item_based_alterEgo = sc.pickleFile(path_pickle_itembased_alterEgo).cache()
+    user_based_alterEgo = sc.pickleFile(path_pickle_userbased_alterEgo).cache()
+
+    user_based_dict_bd = sc.broadcast(user_based_alterEgo.collectAsMap())
+    item_based_dict_bd = sc.broadcast(item_based_alterEgo.collectAsMap())
+
+    # start private policy.
+    policy_method = "PSA"
+    private_policy_sim = private_policy_pipeline(
+        private_policy, alterEgo_sim, policy_method)
+    private_policy_sim.saveAsPickleFile(
+        path_pickle_private_policy_itembased_sim)

@@ -1,74 +1,95 @@
 # -*- coding: utf-8 -*-
 """a final recommender."""
+import numpy as np
 
 
 class Recommendation:
     def __init__(self, alpha, method):
         """Initialize the parameters
         Args:
-            k:          The size of private neighborhood
-            alpha:      Parameter used to define temporal Relevance, controls the decaying rate.
+            alpha: parameter that used to define temporal Relevance,
+                control the decaying rate.
+            method: the method used for recommendation,
+                it will decide if we should add decay.
         """
         self.alpha = alpha
         self.method = method
 
-    def modify_rating(self, rating):
-        """If the predicted rating is out of range, i.e., < 0 or > 5, then, adjust it to the closest bound.
+    def bound_rating(self, rating):
+        """bound the value of rating.
+            If the predicted rating is out of range,
+            i.e., < 0 or > 5, then, adjust it to the closest bound.
         """
-        return max(0, min(int(rating + 0.5), 5))
+        return 1.0 * max(0, min(int(rating + 0.5), 5))
 
-    def user_based_prediction(self, uid, pairs, rating_bd, sim_bd, user_bd):
+    def user_based_prediction(self, line, rating_bd, sim_bd, user_bd):
         """Use this function to predict the rating of item for this user.
         Args:
-            uid:
-            pairs:             in the format of [(iid, rating, time), ...]
-            rating_bd:         broadcast [uid: [(iid1, rating1, time1), ...]
-            sim_bd:            broadcast [uid: [(uid1, sim1), (uid2, sim2), ...]]
-            user_bd:           broadcast [uid: (average, norm, length)]
+            line: (uid, pairs)
+                where pairs in the format of (iid, rating, time)*
+            rating_bd: broadcast of {uid: [(iid1, rating1, time1)*]}*
+            sim_bd: broadcast of {uid: [(uid, sim)*]}*
+            user_bd: broadcast pf {uid: (average, norm, count)}*
         """
-        def prediction(pair, all_uid_neigh_info, user_bd, uid):
-            """Use this function to do the prediction. It can either add decay rate or not, which is decided by "method".
+        def prediction(pair, uid_allneighbor_info, user_bd, uid):
+            """do the prediction. It can either add decay rate or not,
+                which is decided by `method`.
             Args:
-                pair:                  It has format as follows:
-                                        (iid1, rating1, time1)
-                all_uid_neigh_info:    It has format as follows:
-                                        [(uid1, sim1, rating_record1), ...]
-                average_uid:           Average rating of current uid.
+                pair: (iid, rating, time)
+                uid_allneighbor_info: (uid, sim, rating_record)*
+                average_uid: average rating of current uid.
             """
-            iid = pair[0]
-            real_rating = pair[1]
-            average_uid = user_bd.value[uid][0]
+            iid, real_rating, time = pair
+            average_uid_rating = user_bd.value[uid][0]
             sim_rating = []
-            for info in all_uid_neigh_info:
-                sim_rating += [(iid[0], info[1], i[1] - user_bd.value[info[0]][0]) for i in info[2] if iid in i[0]]
+            for info in uid_allneighbor_info:
+                uid, sim, ratings = info
+                sim_rating += [
+                    (rating[0], sim, rating[1] - average_uid_rating)
+                    for rating in ratings if iid in rating[0]]
+
             if len(sim_rating) != 0:
-                sim_rating = [(line[0], line[1] * line[2], abs(line[1]))for line in sim_rating]
-                predicted_rating = average_uid + sum(map(lambda line: line[1], sim_rating)) / sum(map(lambda line: line[2], sim_rating))
+                sim_rating = [
+                    (line[0], line[1] * line[2], abs(line[1]))
+                    for line in sim_rating]
+                predicted_rating = average_uid_rating + sum(
+                    map(lambda line: line[1], sim_rating)) / sum(
+                    map(lambda line: line[2], sim_rating))
             else:
-                predicted_rating = average_uid
-            return iid, real_rating, self.modif_rating(predicted_rating)
-        all_uid_neigh_info  = [(u[0], u[1], rating_bd.value[u[0]]) for u in sim_bd.value[uid]]
-        return uid, [prediction(pair, all_uid_neigh_info, user_bd, uid) for pair in pairs]
+                predicted_rating = average_uid_rating
+            return iid, real_rating, self.bound_rating(predicted_rating)
 
-    def user_based_recommendation(self, testRDD, sim_pair_dict, user_based_dict_bd, user_info):
-        """Recommendation -> user-based, i.e., normal recommendation. For privacy protection purpose, no decay rate is allowed.
+        uid, pairs = line
+        uid_allneighbor_info = [
+            (u[0], u[1], rating_bd.value[u[0]]) for u in sim_bd.value[uid]]
+        return uid, [prediction(
+            pair, uid_allneighbor_info, user_bd, uid) for pair in pairs]
+
+    def user_based_recommendation(
+            self, test_dataRDD,
+            user_based_dict_bd, sim_pair_dict_bd, user_info_bd):
+        """user-based recommendation.
+            For privacy protection purpose, no decay rate is allowed.
         """
-        return (testRDD.filter(lambda (uid, pairs): uid in sim_pair_dict.value.keys())
-                        .map(lambda (uid, pairs): self.userBasedPredict(uid, pairs, user_based_dict_bd, sim_pair_dict, user_info))
-                )
+        sim_pair_dict_keys = set(sim_pair_dict_bd.value.keys())
+        return test_dataRDD.filter(
+            lambda line: line[0] in sim_pair_dict_keys).map(
+            lambda line: self.user_based_prediction(
+                line, user_based_dict_bd, sim_pair_dict_bd, user_info_bd))
 
-    def item_based_predict_withoutdecay(self, uid, pairs, rating_bd, sim_bd, item_bd):
-        """Use this function to predict the rating of item for this user.
+    def item_based_prediction(self, line, rating_bd, sim_bd, item_bd):
+        """predict the rating of item for a specific user.
         Args:
-            iid:
-            pairs:             in the format of [(iid, rating, time), ...]
-            rating_bd:         broadcast [uid: [(iid1, rating1, time1), ...]
-            sim_bd:            broadcast [iid: [(iid1, sim1), (iid2, sim2), ...]]
-            item_bd:           broadcast [iid: (average, norm, length)]
+            line: (uid, pairs),
+                where pairs: in the format of (iid, rating, time)*
+            rating_bd: broadcast of {uid: [(iid1, rating1, time1)*]}
+            sim_bd: broadcast of {iid: [(iid, sim)*]}
+            item_bd: broadcast of {iid: (average, norm, length)}
         """
         def sort_by_time(pairs):
             """For each user, sort its rating records based on its datetime.
-                More specifically, if time_a > time_b, then: time_a <- x, time_b <- x + 1.
+                More specifically, if time_a > time_b,
+                    then: time_a <- x, time_b <- x + 1.
             """
             pairs = sorted(pairs, key=lambda line: line[2], reverse=False)
             order = 0
@@ -81,8 +102,8 @@ class Recommendation:
                     out += [(pairs[i][0], pairs[i][1], order)]
             return out
 
-        def fDecay(cur, t_ui):
-            return exp(- self.alpha * (cur - t_ui))
+        def f_decay(cur, t_ui):
+            return np.exp(- self.alpha * (cur - t_ui))
 
         def add_decay(pairs):
             """add decay rate to the pairs.
@@ -91,49 +112,76 @@ class Recommendation:
             """
             new_pairs = sort_by_time(pairs)
             current_time = max(map(lambda line: line[2], new_pairs)) + 1
-            final_pairs = [(pair[0] * fDecay(current_time, pair[2]), pair[1] * fDecay(current_time, pair[2])) for pair in new_pairs]
-            return sum(map(lambda line: line[0], final_pairs)) / sum(map(lambda line: line[1], final_pairs))
+            final_pairs = [
+                (pair[0] * f_decay(current_time, pair[2]),
+                 pair[1] * f_decay(current_time, pair[2]))
+                for pair in new_pairs]
+            return sum(map(lambda line: line[0], final_pairs)) / sum(
+                map(lambda line: line[1], final_pairs))
 
         def prediction(uid, pair, rating_bd, sim_bd, item_bd):
-            """Use this function to do the prediction. It can either add decay rate or not, which is decided by "method".
+            """do the prediction. It can either add decay rate or not,
+                which is decided by `method`.
             """
-            iid = pair[0]
+            iid, real_rating = pair[0], pair[1]
             if iid not in sim_bd.value.keys():
                 return ()
-            iid_neigh = [(i[0], i[1], rating_bd.value[i[0]]) for i in sim_bd.value[iid]]
-            real_rating = pair[1]
-            iid_average = item_bd.value[iid][0]
+            iid_neighbors = [
+                (i[0], i[1], rating_bd.value[i[0]]) for i in sim_bd.value[iid]]
+            average_iid_rating = item_bd.value[iid][0]
             sim_rating = []
-            for info in iid_neigh:
-                sim_rating += [(iid, info[1], i[1] - item_bd.value[info[0]][0], i[2]) for i in info[2] if uid in i[0]]
+            for info in iid_neighbors:
+                sim_rating += [
+                    (iid, info[1], i[1] - item_bd.value[info[0]][0], i[2])
+                    for i in info[2] if uid in i[0]]
             if len(sim_rating) != 0:
-                sim_ratings = [(line[1] * line[2], abs(line[1]), line[3])for line in sim_rating]
-                predicted_rating_no_decay = iid_average + sum(map(lambda line: line[0], sim_ratings)) / sum(map(lambda line: line[1], sim_ratings))
-                predicted_rating_decay = iid_average + addDecay(sim_ratings)
+                sim_ratings = [
+                    (line[1] * line[2], abs(line[1]), line[3])
+                    for line in sim_rating]
+                predicted_rating_no_decay = average_iid_rating + sum(
+                    map(lambda line: line[0], sim_ratings)) / sum(
+                    map(lambda line: line[1], sim_ratings))
+                predicted_rating_decay = \
+                    average_iid_rating + add_decay(sim_ratings)
             else:
-                predicted_rating_no_decay = iid_average
-                predicted_rating_decay = iid_average
-            return iid, real_rating, self.modif_rating(predicted_rating_no_decay), self.modif_rating(predicted_rating_decay)
-        return uid, [prediction(uid, pair, rating_bd, sim_bd, item_bd) for pair in pairs]
+                predicted_rating_no_decay = average_iid_rating
+                predicted_rating_decay = average_iid_rating
+            return iid, real_rating, \
+                self.bound_rating(predicted_rating_no_decay), \
+                self.bound_rating(predicted_rating_decay)
 
-    def item_based_recommendation(self, testRDD, sim_pair_dict, item_based_dict_bd, item_info):
-        """item-based Recommendation. It calculate rating with decay rate as well as without decay rate.
+        uid, pairs = line
+        return uid, [
+            prediction(uid, pair, rating_bd, sim_bd, item_bd)
+            for pair in pairs]
+
+    def item_based_recommendation(
+            self, test_dataRDD,
+            item_based_dict_bd, sim_pair_dict_bd, item_info_bd):
+        """item-based Recommendation.
+            it calculate rating with decay rate as well as without decay rate.
         """
-        return testRDD.map(lambda (uid, pairs): self.itemBasedPredictNoDecay(uid, pairs, item_based_dict_bd, sim_pair_dict, item_info))
+        return test_dataRDD.map(
+            lambda line: self.item_based_prediction(
+                line, item_based_dict_bd, sim_pair_dict_bd, item_info_bd))
 
     def calculate_mae(self, rdd):
-        """A function used to calculate MAE
-        """
+        """calculate MAE."""
+        def helper(line, index=2):
+            uid, pairs = line
+            return uid, [
+                abs(pair[1] - pair[index]) for pair in pairs if pair is not ()]
         if "user" in self.method:
-            result = (rdd.map(lambda (uid, pairs): (uid, [abs(pair[1] - pair[2]) for pair in pairs if pair is not ()]))
-                        .map(lambda (uid, pairs): np.array([sum(pairs), len(pairs)]))
-                        .reduce(lambda a, b: a + b))
+            result = rdd.map(helper).map(
+                lambda line: np.array([sum(line[1]), len(line[1])])).reduce(
+                lambda a, b: a + b)
             return str(result[0] / result[1])
         else:
-            nodelayresult = (rdd.map(lambda (uid, pairs): (uid, [abs(pair[1] - pair[2]) for pair in pairs if pair is not ()]))
-                        .map(lambda (uid, pairs): np.array([sum(pairs), len(pairs)]))
-                        .reduce(lambda a, b: a + b))
-            delayresult = (rdd.map(lambda (uid, pairs): (uid, [abs(pair[1] - pair[3]) for pair in pairs if pair is not ()]))
-                        .map(lambda (uid, pairs): np.array([sum(pairs), len(pairs)]))
-                        .reduce(lambda a, b: a + b))
-            return str(nodelayresult[0] / nodelayresult[1])  + "; " + str(delayresult[0] / delayresult[1])
+            nodelay_result = rdd.map(helper).map(
+                lambda line: np.array([sum(line[1]), len(line[1])])).reduce(
+                lambda a, b: a + b)
+            delay_result = rdd.map(lambda line: helper(line, index=3).map(
+                lambda line: np.array([sum(line[1]), len(line[1])])).reduce(
+                lambda a, b: a + b)
+            return str(nodelay_result[0] / nodelay_result[1]) + "; " + \
+                str(delay_result[0] / delay_result[1])
