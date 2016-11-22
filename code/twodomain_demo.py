@@ -37,8 +37,7 @@ if __name__ == '__main__':
         "spark.driver.maxResultSize", "16g").set(
         "spark.python.worker.memory", "16g").set(
         "spark.shuffle.compress", "true").set(
-        "spark.rdd.compress", "true").set(
-        "spark.executor.cores", "8")
+        "spark.rdd.compress", "true")
     sc = SparkContext(conf=myconf)
     sqlContext = SQLContext(sc)
 
@@ -74,10 +73,12 @@ if __name__ == '__main__':
 
     sourceRDD = baseliner_clean_data_pipeline(
         sc, baseliner_cleansource_tool,
-        path_raw_movie, para['init']['is_debug'])
+        path_raw_movie,
+        para['init']['is_debug'], para['init']['num_partition'])
     targetRDD = baseliner_clean_data_pipeline(
         sc, baseliner_cleantarget_tool,
-        path_raw_book, para['init']['is_debug'])
+        path_raw_book,
+        para['init']['is_debug'], para['init']['num_partition'])
 
     trainRDD, testRDD = baseliner_split_data_pipeline(
         sc, baseliner_splitdata_tool, sourceRDD, targetRDD)
@@ -99,8 +100,7 @@ if __name__ == '__main__':
         para['generator']['private_rpo'])
 
     alterEgo_profile = generator_pipeline(
-        generator_tool, extendedsimRDD,
-        para['generator']['private_flag'])
+        generator_tool, extendedsimRDD, para['generator']['private_flag'])
 
     # recommender
     recommender_sim_tool = RecommenderSim(

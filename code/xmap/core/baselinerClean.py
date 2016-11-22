@@ -40,7 +40,7 @@ class BaselinerClean:
         Args:
             iterators: data in lines with format: 'uid, iid, rating, datetime'.
         Returns:
-            (uid, [domain_label + iid, rating, datetime])
+            (uid, [iid + domain_label, rating, datetime])
         """
         for line in iterators:
             splitted_line = re.split('\\s+', line)
@@ -48,7 +48,7 @@ class BaselinerClean:
             if parsed_time.year in self.period:
                 yield (
                     splitted_line[0], (
-                        self.label + splitted_line[1],
+                        splitted_line[1] + self.label,
                         float(splitted_line[2]), parsed_time))
 
     def parse_data(self, originalRDD):

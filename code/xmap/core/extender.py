@@ -26,7 +26,7 @@ class ExtendSim:
         def get_knn(iter_items):
             for iid, info in iter_items:
                 info.sort(key=lambda pair: abs(pair[1]), reverse=True)
-                domain_label = iid[: 2]
+                domain_label = iid[-2:]
                 if iid in BB_items_bd.value:
                     BB_BB = [pair for pair in info
                              if domain_label not in pair[0]][: self.top_k]

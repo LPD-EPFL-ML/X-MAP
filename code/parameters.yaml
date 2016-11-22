@@ -5,9 +5,10 @@ init:
     path_music: raw/music.txt
     is_debug: True
     seed: 666666
+    num_partition: 30
 baseliner:
     num_atleast_rating: 5
-    size_subset: 66666
+    size_subset: 6666
     date_from: 2012
     date_to: 2013
     num_left: 0
