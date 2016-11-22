@@ -114,8 +114,7 @@ if __name__ == '__main__':
         para['recommender']['decay_alpha'],
         para['recommender']['calculate_xmap_sim_method'])
 
-    user_based_alterEgo, item_based_alterEgo, \
-        user_based_dict_bd, item_based_dict_bd, \
+    _, _, user_based_dict_bd, item_based_dict_bd, \
         user_info_bd, item_info_bd, \
         alterEgo_sim = recommender_calculate_sim_pipeline(
             sc, recommender_sim_tool, alterEgo_profile)
@@ -127,7 +126,7 @@ if __name__ == '__main__':
     simpair_dict_bd = sc.broadcast(private_preserve_simpair.collectAsMap())
 
     mae = recommender_prediction_pipeline(
-            recommender_prediction_tool, recommender_sim_tool,
-            testRDD, simpair_dict_bd,
-            user_based_dict_bd, item_based_dict_bd,
-            user_info_bd, item_info_bd)
+        recommender_prediction_tool, recommender_sim_tool,
+        testRDD, simpair_dict_bd,
+        user_based_dict_bd, item_based_dict_bd,
+        user_info_bd, item_info_bd)
