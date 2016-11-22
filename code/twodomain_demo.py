@@ -100,7 +100,8 @@ if __name__ == '__main__':
         para['generator']['private_rpo'])
 
     alterEgo_profile = generator_pipeline(
-        generator_tool, extendedsimRDD, para['generator']['private_flag'])
+        generator_tool,
+        trainRDD, extendedsimRDD, para['generator']['private_flag'])
 
     # recommender
     recommender_sim_tool = RecommenderSim(
@@ -120,7 +121,7 @@ if __name__ == '__main__':
             sc, recommender_sim_tool, alterEgo_profile)
 
     private_preserve_simpair = recommender_privacy_pipeline(
-        recommender_privacy_tool, recommender_sim_tool, alterEgo_sim,
+        recommender_privacy_tool, alterEgo_sim,
         para['recommender']['private_flag'])
 
     simpair_dict_bd = sc.broadcast(private_preserve_simpair.collectAsMap())

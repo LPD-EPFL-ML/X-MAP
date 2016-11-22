@@ -115,9 +115,10 @@ def generator_pipeline(privatemap_tool, trainRDD, extended_simRDD, private):
     else:
         mapped_simRDD = privatemap_tool.cross_nonprivate_mapping(
             extended_simRDD)
-        mapped_sim_dict = map_to_dict(mapped_simRDD)
-        alterEgo_profile = privatemap_tool.build_alterEgo(
-            trainRDD, mapped_sim_dict).cache()
+
+    mapped_sim_dict = map_to_dict(mapped_simRDD)
+    alterEgo_profile = privatemap_tool.build_alterEgo(
+        trainRDD, mapped_sim_dict).cache()
     return alterEgo_profile
 
 
