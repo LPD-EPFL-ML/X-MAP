@@ -53,40 +53,43 @@ if __name__ == '__main__':
         para['init']['path_hdfs'], para['init']['path_book'])
 
     # baseliner
-    clean_source_tool = BaselinerClean(
+    baseliner_cleansource_tool = BaselinerClean(
         para['baseliner']['num_atleast_rating'],
         para['baseliner']['size_subset'],
         para['baseliner']['date_from'],
         para['baseliner']['date_to'], domain_label="S:")
-    clean_target_tool = BaselinerClean(
+    baseliner_cleantarget_tool = BaselinerClean(
         para['baseliner']['num_atleast_rating'],
         para['baseliner']['size_subset'],
         para['baseliner']['date_from'],
         para['baseliner']['date_to'], domain_label="T:")
-    split_data_tool = BaselinerSplit(
+    baseliner_splitdata_tool = BaselinerSplit(
         para['baseliner']['num_left'],
         para['baseliner']['ratio_split'],
         para['baseliner']['ratio_both'],
         para['init']['seed'])
-    itemsim_tool = BaselinerSim(
+    baseliner_calculate_sim_tool = BaselinerSim(
         para['baseliner']['calculate_baseline_sim_method'],
         para['baseliner']['calculate_baseline_weighting'])
 
     sourceRDD = baseliner_clean_data_pipeline(
-        sc, clean_source_tool, path_raw_movie, para['init']['is_debug'])
+        sc, baseliner_cleansource_tool,
+        path_raw_movie, para['init']['is_debug'])
     targetRDD = baseliner_clean_data_pipeline(
-        sc, clean_target_tool, path_raw_book, para['init']['is_debug'])
+        sc, baseliner_cleantarget_tool,
+        path_raw_book, para['init']['is_debug'])
 
     trainRDD, testRDD = baseliner_split_data_pipeline(
-        sc, split_data_tool, sourceRDD, targetRDD)
+        sc, baseliner_splitdata_tool, sourceRDD, targetRDD)
 
     item2item_simRDD = baseliner_calculate_sim_pipeline(
-        sc, itemsim_tool, trainRDD)
+        sc, baseliner_calculate_sim_tool, trainRDD)
 
     # extender
     extendsim_tool = ExtendSim(para['extender']['extend_among_topk'])
     extendedsimRDD = extender_pipeline(
-        sc, sqlContext, itemsim_tool, extendsim_tool, item2item_simRDD)
+        sc, sqlContext, baseliner_calculate_sim_tool,
+        extendsim_tool, item2item_simRDD)
 
     # generator
     generator_tool = Generator(
