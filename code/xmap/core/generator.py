@@ -3,7 +3,7 @@
 import numpy as np
 
 
-class PrivateMapping:
+class Generator:
     def __init__(self, mapping_range, privacy_epsilon, sim_method, rpo):
         """Initialize the parameters
         Args:
@@ -102,3 +102,31 @@ class PrivateMapping:
                 pairs = sorted(lines, key=lambda x: - abs(x[1]))[: topn]
                 yield iid, pairs[np.random.randint(0, len(pairs) - 1)][0]
         return rdd.mapPartitions(helper)
+
+    def mapping_item(self, line, mapping_dict):
+        """Use traini.
+        Args:
+            line: in the form of (uid, iid, rating, rating time).
+            mapping_dict: {source item: target item}.
+            mapping_key: it contains all keys of mapping.
+        """
+        return (line[0], mapping_dict[line[1]], line[2], line[3]) \
+            if line[1] in mapping_dict else None
+
+    def build_alterEgo(self, trainRDD, mapping_dict):
+        """use this function to build alterEgo profile.
+        Args:
+            rdd: training dataset, contains source/target domain item,
+                in the form of `iid, rating, rating time.`
+            mapping_dict: `{target item: source item}`.
+        Returns:
+            alterEgoProfile in target domain.
+                It has structure as follows: (uid, iid, rating, time)*
+        """
+        dataRDD = trainRDD.flatMap(
+            lambda line: [(line[0], l[0], l[1], l[2]) for l in line[1]])
+        alterEgo_profile = dataRDD.map(
+            lambda line: self.mapping_item(line, mapping_dict)).filter(
+            lambda line: line is not None)
+        return dataRDD.filter(
+            lambda line: "T:" in line[1]).union(alterEgo_profile)

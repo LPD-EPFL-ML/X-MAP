@@ -6,7 +6,7 @@ from math import log, e
 import numpy as np
 
 
-class PrivatePolicy:
+class RecommenderPrivacy:
     def __init__(self, mapping_range, privacy_epsilon, rpo):
         """Initialize the parameters
         Args:

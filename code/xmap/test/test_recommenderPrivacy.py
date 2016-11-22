@@ -7,8 +7,8 @@ from os.path import join
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 
-from xmap.core.privatePolicy import PrivatePolicy
-from xmap.utils.assist import private_policy_pipeline
+from xmap.core.recommenderPrivacy import RecommenderPrivacy
+from xmap.utils.assist import recommender_privacy_pipeline
 
 
 if __name__ == '__main__':
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         path_root, "cache/two_domain/policy/policy_itembased_sim")
 
     # init class.
-    private_policy = PrivatePolicy(
+    private_policy = RecommenderPrivacy(
         mapping_range=10, privacy_epsilon=0.6, rpo=0.1)
 
     # load user based data.
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     # start private policy.
     policy_method = "PSA"
-    private_policy_sim = private_policy_pipeline(
+    private_policy_sim = recommender_privacy_pipeline(
         private_policy, alterEgo_sim, policy_method)
     private_policy_sim.saveAsPickleFile(
         path_pickle_private_policy_userbased_sim)
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     # start private policy.
     policy_method = "PSA"
-    private_policy_sim = private_policy_pipeline(
+    private_policy_sim = recommender_privacy_pipeline(
         private_policy, alterEgo_sim, policy_method)
     private_policy_sim.saveAsPickleFile(
         path_pickle_private_policy_itembased_sim)

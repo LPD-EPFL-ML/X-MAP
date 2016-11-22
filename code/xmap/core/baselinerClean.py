@@ -4,15 +4,15 @@ import re
 from datetime import datetime
 
 
-class CleanData:
+class BaselinerClean:
     def __init__(
-            self, num_atleast_rating, num_observation,
+            self, num_atleast_rating, size_subset,
             date_from, date_to, domain_label):
         """initialize  parameter.
         Args:
             num_atleast_rating:
                 For each user, it rated at least 'num_atleast_rating' items.
-            num_observation:
+            size_subset:
                 The number of observation we want to choose.
             date_from:
                 The starting date of ratings.
@@ -22,7 +22,7 @@ class CleanData:
                 Add a domain label to the original dataset.
         """
         self.num_atleast_rating = num_atleast_rating
-        self.num_observation = num_observation
+        self.size_subset = size_subset
         self.period = range(date_from, date_to + 1)
         self.label = domain_label
 
@@ -57,7 +57,7 @@ class CleanData:
 
     def take_partial_data(self, dataRDD):
         """take partial data to do the computation."""
-        return dataRDD.take(self.num_observation)
+        return dataRDD.take(self.size_subset)
 
     def remove_invalid(self, iterators):
         """remove invalid rating, e.g., old or duplicate.

@@ -4,8 +4,8 @@
 from os.path import join
 from pyspark import SparkContext, SparkConf
 
-from xmap.core.cleanData import CleanData
-from xmap.utils.assist import clean_data_pipeline
+from xmap.core.baselinerClean import BaselinerClean
+from xmap.utils.assist import baseliner_clean_data_pipeline
 
 
 if __name__ == '__main__':
@@ -27,16 +27,16 @@ if __name__ == '__main__':
     date_to = 2013
 
     # A demo for the class.
-    clean_source_tool = CleanData(
+    clean_source_tool = BaselinerClean(
         num_atleast_rating, num_observation,
         date_from, date_to, domain_label="S:")
-    clean_target_tool = CleanData(
+    clean_target_tool = BaselinerClean(
         num_atleast_rating, num_observation,
         date_from, date_to, domain_label="T:")
 
-    cleaned_movieRDD = clean_data_pipeline(
+    cleaned_movieRDD = baseliner_clean_data_pipeline(
         sc, clean_source_tool, path_raw_movie)
-    cleaned_bookRDD = clean_data_pipeline(
+    cleaned_bookRDD = baseliner_clean_data_pipeline(
         sc, clean_target_tool, path_raw_book)
 
     cleaned_movieRDD.saveAsPickleFile(path_pickle_movie)

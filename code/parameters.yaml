@@ -1,0 +1,32 @@
+init:
+    path_hdfs: file:/home/tlin/notebooks/data
+    path_movie: raw/movie.txt
+    path_book: raw/book.txt
+    path_music: raw/music.txt
+    is_debug: True
+    seed: 666666
+baseliner:
+    num_atleast_rating: 5
+    size_subset: 66666
+    date_from: 2012
+    date_to: 2013
+    num_left: 0
+    ratio_split: 0.2
+    ratio_both: 0.8
+    calculate_baseline_sim_method: ad_cos
+    calculate_baseline_weighting: 50
+extender:
+    extend_among_topk: 10
+generator:
+    private_flag: True
+    mapping_range: 1
+    private_epsilon: 0.6
+    private_rpo: 0.1
+recommender:
+    calculate_xmap_sim_method: cosine_user
+    calculate_xmap_weighting: 50
+    mapping_range: 10
+    private_flag: True
+    private_epsilon: 0.6
+    private_rpo: 0.1
+    decay_alpha: 0.03

@@ -3,7 +3,7 @@
 import random
 
 
-class SplitData:
+class BaselinerSplit:
     def __init__(self, num_left, ratio_split, ratio_both, seed):
         """ Initialize parameter.
         Args:
@@ -71,16 +71,16 @@ class SplitData:
             uid, source data, remaining data(target), removed data(target)
             The remaining data can be empty.
         """
-        def decide_remaining(mydict):
-            remaining_dict = random.sample(mydict, self.num_left)
+        def decide_remaining(target):
+            remaining_dict = random.sample(target, self.num_left)
             test_dict = [
-                item for item in mydict if item not in remaining_dict]
+                item for item in target if item not in remaining_dict]
             return [remaining_dict, test_dict]
 
         for uid, lines in iterators:
             source = [line for line in lines if "S:" in line[0]]
             target = filter(lambda line: line not in source, lines)
-            remain, remove = decide_remaining(target)
+            remain, remove = decide_remaining(list(target))
             yield uid, source, remain, remove
 
     def split_data(

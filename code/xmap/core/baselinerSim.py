@@ -8,7 +8,7 @@ import numpy as np
 from pyspark.sql import Row
 
 
-class BaselineSim:
+class BaselinerSim:
     def __init__(self, method, num_atleast):
         """Initialize parameter."""
         self.method = method

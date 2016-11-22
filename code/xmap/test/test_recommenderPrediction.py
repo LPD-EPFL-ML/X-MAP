@@ -7,9 +7,10 @@ from os.path import join
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 
-from xmap.core.crossSim import CrossSim
-from xmap.core.recommendation import Recommendation
+from xmap.core.recommenderSim import RecommenderSim
+from xmap.core.recommenderPrediction import RecommenderPrediction
 from xmap.utils.assist import write_txt
+from xmap.utils.assist import recommender_prediction_pipeline
 
 
 if __name__ == '__main__':
@@ -51,8 +52,8 @@ if __name__ == '__main__':
         path_roots, "cache/two_domain/recommendation/itembased_mae.txt")
 
     # load data.
-    train_dataRDD = sc.pickleFile(path_pickle_train).cache()
-    test_dataRDD = sc.pickleFile(path_pickle_test).cache()
+    trainRDD = sc.pickleFile(path_pickle_train).cache()
+    testRDD = sc.pickleFile(path_pickle_test).cache()
 
     alterEgo_userbased_sim = sc.pickleFile(
         path_pickle_alterEgo_userbased_sim).cache()
@@ -70,10 +71,12 @@ if __name__ == '__main__':
         path_pickle_userbased_alterEgo).cache()
 
     # init class
-    recommender_userbased = Recommendation(alpha=0.1, method='cosine_user')
-    recommender_itembased = Recommendation(alpha=0.1, method='cosine_item')
+    recommender_userbased = RecommenderPrediction(
+        alpha=0.1, method='cosine_user')
+    recommender_itembased = RecommenderPrediction(
+        alpha=0.1, method='cosine_item')
 
-    cross_sim = CrossSim(method='cosine_user', num_atleast=50)
+    cross_sim = RecommenderSim(method='cosine_user', num_atleast=50)
 
     # build broadcast.
     user_info = cross_sim.get_info(user_based_alterEgo)
@@ -82,28 +85,26 @@ if __name__ == '__main__':
     user_info_bd = sc.broadcast(user_info.collectAsMap())
     item_info_bd = sc.broadcast(item_info.collectAsMap())
 
-    user_based_dict_bd = sc.broadcast(
-        user_based_alterEgo.collectAsMap())
-    item_based_dict_bd = sc.broadcast(
-        item_based_alterEgo.collectAsMap())
+    user_based_dict_bd = sc.broadcast(user_based_alterEgo.collectAsMap())
+    item_based_dict_bd = sc.broadcast(item_based_alterEgo.collectAsMap())
 
-    userbased_sim_pair_dict_bd = sc.broadcast(
+    userbased_simpair_dict_bd = sc.broadcast(
         userbased_sim_pair.collectAsMap())
-    itembased_sim_pair_dict_bd = sc.broadcast(
+    itembased_simpair_dict_bd = sc.broadcast(
         itembased_sim_pair.collectAsMap())
 
     # user based model.
-    predicted_userbased = recommender_userbased.user_based_recommendation(
-        test_dataRDD,
-        user_based_dict_bd, userbased_sim_pair_dict_bd, user_info_bd)
-    mae_userbased = recommender_userbased.calculate_mae(predicted_userbased)
-    write_txt(mae_userbased, path_txt_userbased_mae)
+    mae = recommender_prediction_pipeline(
+            recommender_userbased, cross_sim, testRDD,
+            userbased_simpair_dict_bd,
+            user_based_dict_bd, item_based_dict_bd,
+            user_info_bd, item_info_bd)
+    write_txt(mae, path_txt_userbased_mae)
 
     # item based model.
-    predicted_itembased = recommender_itembased.item_based_recommendation(
-        test_dataRDD,
-        item_based_dict_bd, itembased_sim_pair_dict_bd, item_info_bd)
-    mae_itembased = recommender_itembased.calculate_mae(predicted_itembased)
-
-    print(mae_itembased)
-    write_txt(mae_itembased, path_txt_itembased_mae)
+    mae = recommender_prediction_pipeline(
+            recommender_itembased, cross_sim, testRDD,
+            itembased_simpair_dict_bd,
+            user_based_dict_bd, item_based_dict_bd,
+            user_info_bd, item_info_bd)
+    write_txt(mae, path_txt_itembased_mae)

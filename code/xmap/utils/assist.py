@@ -1,19 +1,23 @@
 # -*- coding: utf-8 -*-
 """An auxilary file for xmap."""
+import yaml
 
 
-def clean_data_pipeline(sc, clean_tool, path_rawdata):
+def baseliner_clean_data_pipeline(sc, clean_tool, path_rawdata, is_debug):
     """a pipeline to clean the data."""
     dataRDD = sc.textFile(path_rawdata, 30)
     parsedRDD = clean_tool.parse_data(dataRDD)
     filteredRDD = clean_tool.filter_data(parsedRDD)
     cleanedRDD = clean_tool.clean_data(filteredRDD).cache()
-    partial_data = clean_tool.take_partial_data(cleanedRDD)
-    partialRDD = sc.parallelize(partial_data, 30).cache()
-    return partialRDD
+    if is_debug:
+        partial_data = clean_tool.take_partial_data(cleanedRDD)
+        partialRDD = sc.parallelize(partial_data, 30).cache()
+        return partialRDD
+    else:
+        return cleanedRDD
 
 
-def split_data_pipeline(sc, split_tool, sourceRDD, targetRDD):
+def baseliner_split_data_pipeline(sc, split_tool, sourceRDD, targetRDD):
     """a pipeline to clean the data."""
     overlap_userRDD = split_tool.find_overlap_user(sourceRDD, targetRDD)
     overlap_userRDD_bd = sc.broadcast(overlap_userRDD.collect())
@@ -21,16 +25,15 @@ def split_data_pipeline(sc, split_tool, sourceRDD, targetRDD):
     non_overlap_sourceRDD, overlap_sourceRDD, \
         non_overlap_targetRDD, overlap_targetRDD = split_tool.distinguish_data(
             overlap_userRDD_bd, sourceRDD, targetRDD)
-    training_dataRDD, test_dataRDD = split_tool.split_data(
+    trainRDD, testRDD = split_tool.split_data(
         non_overlap_sourceRDD, overlap_sourceRDD,
         non_overlap_targetRDD, overlap_targetRDD)
 
-    training_dataRDD, test_dataRDD \
-        = training_dataRDD.cache(), test_dataRDD.cache()
-    return training_dataRDD, test_dataRDD
+    trainRDD, testRDD = trainRDD.cache(), testRDD.cache()
+    return trainRDD, testRDD
 
 
-def itembasedsim_pipeline(sc, itemsim_tool, trainRDD):
+def baseliner_calculate_sim_pipeline(sc, itemsim_tool, trainRDD):
     """a pipeline to calculate itembased sim."""
     universal_user_info = itemsim_tool.get_universal_user_info(trainRDD)
     user_info = sc.broadcast(universal_user_info.collectAsMap())
@@ -100,30 +103,31 @@ def extract_siminfo(sc, classfied_items):
     return BB_info, NB_info, knn_BB_bd, knn_NB_bd
 
 
-def private_mapping_pipeline(privatemap_tool, extended_simRDD, private):
+def generator_pipeline(privatemap_tool, trainRDD, extended_simRDD, private):
     """a pipeline to private map item.
     args:
         private: boolean value.
     """
     if private:
-        mappedRDD = privatemap_tool.cross_private_mapping(
+        mapped_simRDD = privatemap_tool.cross_private_mapping(
             extended_simRDD)
     else:
-        mappedRDD = privatemap_tool.cross_nonprivate_mapping(
+        mapped_simRDD = privatemap_tool.cross_nonprivate_mapping(
             extended_simRDD)
-    return mappedRDD, map_to_dict(mappedRDD)
+        mapped_sim_dict = map_to_dict(mapped_simRDD)
+        alterEgo_profile = privatemap_tool.build_alterEgo(
+            trainRDD, mapped_sim_dict).cache()
+    return alterEgo_profile
 
 
-def crosssim_pipeline(sc, cross_sim_tool, training_dataRDD, mapped_sim):
+def recommender_calculate_sim_pipeline(
+        sc, cross_sim_tool, alterEgo_profile):
     """a pipeline to calculate crosssim in target domain."""
-    mapped_sim_dict = map_to_dict(mapped_sim)
-    alterEgo_profile = cross_sim_tool.build_alterEgo(
-        training_dataRDD, mapped_sim_dict).cache()
-
     user_based_alterEgo = cross_sim_tool.build_sthbased_profile(
         alterEgo_profile, "user").cache()
     item_based_alterEgo = cross_sim_tool.build_sthbased_profile(
         alterEgo_profile, "item").cache()
+
     user_based_dict_bd = sc.broadcast(user_based_alterEgo.collectAsMap())
     item_based_dict_bd = sc.broadcast(item_based_alterEgo.collectAsMap())
 
@@ -133,18 +137,18 @@ def crosssim_pipeline(sc, cross_sim_tool, training_dataRDD, mapped_sim):
     user_info_bd = sc.broadcast(user_info.collectAsMap())
     item_info_bd = sc.broadcast(item_info.collectAsMap())
 
-    targetdomain_sim = cross_sim_tool.calculate_sim(
+    alterEgo_sim = cross_sim_tool.calculate_sim(
         item_based_alterEgo, user_based_alterEgo,
         item_info_bd, user_info_bd).cache()
 
     return user_based_alterEgo, item_based_alterEgo, \
         user_based_dict_bd, item_based_dict_bd, \
-        user_info_bd, item_info_bd, targetdomain_sim
+        user_info_bd, item_info_bd, alterEgo_sim
 
 
-def private_policy_pipeline(policy_tool, alterEgo_sim, policy_method):
+def recommender_privacy_pipeline(policy_tool, alterEgo_sim, is_private):
     """a pipeline that apply private policy on alterEgo profile."""
-    if policy_method == "PSA":
+    if is_private:
         private_neighbor = policy_tool.private_neighbor_selection(
             alterEgo_sim)
         noise_perturbed = policy_tool.noise_perturbation(
@@ -156,6 +160,21 @@ def private_policy_pipeline(policy_tool, alterEgo_sim, policy_method):
         no_noise_perturbed = policy_tool.nonnoise_perturbation(
             no_private_neighbor)
         return no_noise_perturbed
+
+
+def recommender_prediction_pipeline(
+        recommender_tool, cross_sim_tool, testRDD, simpair_dict_bd,
+        user_based_dict_bd, item_based_dict_bd, user_info_bd, item_info_bd):
+    """a pipeline to do the recommendation."""
+    if "user" in cross_sim_tool.method:
+        predicted = recommender_tool.user_based_recommendation(
+            testRDD,
+            user_based_dict_bd, simpair_dict_bd, user_info_bd)
+    else:
+        predicted = recommender_tool.item_based_recommendation(
+            testRDD,
+            item_based_dict_bd, simpair_dict_bd, item_info_bd)
+    return recommender_tool.calculate_mae(predicted)
 
 
 def map_to_dict(rdd):
@@ -174,3 +193,9 @@ def write_txt(data, out_path, type="wb"):
     """write the data to the txt file."""
     with open(out_path, type) as f:
         f.write(data.encode("utf-8"))
+
+
+def load_parameter(path):
+    """load parameter from file."""
+    with open(path, 'rb') as f:
+        return yaml.load(f)

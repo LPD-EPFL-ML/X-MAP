@@ -6,39 +6,11 @@ from itertools import combinations
 import numpy as np
 
 
-class CrossSim:
+class RecommenderSim:
     def __init__(self, method, num_atleast):
         """Initialize parameter"""
         self.method = method
         self.num_atleast = num_atleast
-
-    def mapping_item(self, line, mapping_dict):
-        """Use traini.
-        Args:
-            line: in the form of (uid, iid, rating, rating time).
-            mapping_dict: {source item: target item}.
-            mapping_key: it contains all keys of mapping.
-        """
-        return (line[0], mapping_dict[line[1]], line[2], line[3]) \
-            if line[1] in mapping_dict else None
-
-    def build_alterEgo(self, trainRDD, mapping_dict):
-        """use this function to build alterEgo profile.
-        Args:
-            rdd: training dataset, contains source/target domain item,
-                in the form of `iid, rating, rating time.`
-            mapping_dict: `{target item: source item}`.
-        Returns:
-            alterEgoProfile in target domain.
-                It has structure as follows: (uid, iid, rating, time)*
-        """
-        dataRDD = trainRDD.flatMap(
-            lambda line: [(line[0], l[0], l[1], l[2]) for l in line[1]])
-        alterEgo_profile = dataRDD.map(
-            lambda line: self.mapping_item(line, mapping_dict)).filter(
-            lambda line: line is not None)
-        return dataRDD.filter(
-            lambda line: "T:" in line[1]).union(alterEgo_profile)
 
     def build_sthbased_profile(self, rdd, profile):
         """build an item-based or a user-based profile.

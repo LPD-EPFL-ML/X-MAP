@@ -3,7 +3,7 @@
 import numpy as np
 
 
-class Recommendation:
+class RecommenderPrediction:
     def __init__(self, alpha, method):
         """Initialize the parameters
         Args:

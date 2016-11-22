@@ -5,8 +5,8 @@ from os.path import join
 
 from pyspark import SparkContext, SparkConf
 
-from xmap.core.baselineSim import BaselineSim
-from xmap.utils.assist import itembasedsim_pipeline
+from xmap.core.baselinerSim import BaselinerSim
+from xmap.utils.assist import baseliner_calculate_sim_pipeline
 
 
 if __name__ == '__main__':
@@ -29,8 +29,8 @@ if __name__ == '__main__':
     trainRDD = sc.pickleFile(path_pickle_train)
     testRDD = sc.pickleFile(path_pickle_test)
 
-    itemsim = BaselineSim(method='ad_cos', num_atleast=50)
+    itemsim = BaselinerSim(method='ad_cos', num_atleast=50)
 
-    item2item_simRDD = itembasedsim_pipeline(sc, itemsim, trainRDD)
+    item2item_simRDD = baseliner_calculate_sim_pipeline(sc, itemsim, trainRDD)
 
     item2item_simRDD.saveAsPickleFile(path_pickle_baseline_sim)

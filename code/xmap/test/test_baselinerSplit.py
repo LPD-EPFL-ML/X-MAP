@@ -5,8 +5,8 @@ from os.path import join
 
 from pyspark import SparkContext, SparkConf
 
-from xmap.core.splitData import SplitData
-from xmap.utils.assist import split_data_pipeline
+from xmap.core.baselinerSplit import BaselinerSplit
+from xmap.utils.assist import baseliner_split_data_pipeline
 
 
 if __name__ == '__main__':
@@ -32,10 +32,10 @@ if __name__ == '__main__':
     bookRDD = sc.pickleFile(path_pickle_book)
     sourceRDD, targetRDD = movieRDD, bookRDD
 
-    split_data = SplitData(num_left, ratio_split, ratio_both, seed)
+    split_data = BaselinerSplit(num_left, ratio_split, ratio_both, seed)
 
-    training_dataRDD, test_dataRDD = split_data_pipeline(
+    trainRDD, testRDD = baseliner_split_data_pipeline(
         sc, split_data, sourceRDD, targetRDD)
 
-    training_dataRDD.saveAsPickleFile(path_pickle_train)
-    test_dataRDD.saveAsPickleFile(path_pickle_test)
+    trainRDD.saveAsPickleFile(path_pickle_train)
+    testRDD.saveAsPickleFile(path_pickle_test)
