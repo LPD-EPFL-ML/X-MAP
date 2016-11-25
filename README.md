@@ -1,57 +1,57 @@
-# X-<sub><sup>MAP</sup></sub>
+# X-MAP: Heterogeneous Recommendation at Large-Scale
 
-Xmap is the implementation of the paper `What You Might Like To Read After Watching Interstellar`. The system is built upon Apache Spark, and written by Python.
+X-MAP is a large-scale heterogeneous recommender. X-MAP is built on top of Apache Spark and implemented in Python.
 
 
 ## Getting Started
 
 ### Prerequisites
 
-You should have `Python 3`, `Numpy 1.10.4`, `Apache Spark 1.6.1` installed on your computer.
+X-MAP requires `Python 3`, `Numpy 1.10.4`, `Apache Spark 1.6.1` installed on your machine.
 
 #### Installing
 Please refer to
-[Anaconda](https://www.continuum.io/downloads), [Apache Spark](http://spark.apache.org/) for installization.
+[Anaconda](https://www.continuum.io/downloads), [Apache Spark](http://spark.apache.org/) for installation.
 
 #### Installing (Docker)
 We also provide a docker image for your convenience.
 
-If you do not have `docker` and `docker-compose` installed on your computer, please check the [official configuration guidance](https://www.docker.com/products/overview) for help.
-Otherwise, open your console and go to the top-level folder `platform`, and type the command below to setup the corresponding docker image.
+If you do not have `docker` and `docker-compose` installed on your machine, please check the [official configuration guidance](https://www.docker.com/products/overview) for installation.
+Otherwise, open your console and go to the `platform` folder, and execute the below-mentioned command to setup the corresponding docker image.
 
 ```
 docker-compose build
 ```
 
 ## Build
-Once you modify the scripts in `xmap` folder, you should rebuild the package through the following command:
+Once you modify the scripts in `X-MAP` folder, you should rebuild the package using the following command:
 
 ```
 python setup.py install
 ```
 
-You will find an egg file that located in `dist/xmap-0.1.0-py3.5.egg`, and you will use this file for your application.
+You will find an egg file, located in `dist/xmap-0.1.0-py3.5.egg`, that you will use for your application.
 
 ## Running the tests
 ### Prerequisites
-Xmap use [Amazon Dataset](https://snap.stanford.edu/data/web-Amazon.html) for its experiment. For current implementation, the input data follows the following format:
-`userid itemid rating time`, seperated by `\t`.
+X-MAP uses [Amazon Dataset](https://snap.stanford.edu/data/web-Amazon.html) for its experiment. For current implementation, the input data follows the following format:
+`<userid>\t<itemid>\t<rating>\t<time>`.
 
-### Run Xmap
-Here we provide two examples `twodomain_demo.py` and `multidomain_demo.py`, and you can set your parameters in the file `parameters.yaml`.
+### Run X-MAP
+We provide here two demonstrations: `twodomain_demo.py` and `multidomain_demo.py`. You can also tune the parameters in the file `parameters.yaml`.
 
-Note that the scipt should run successfully under provided docker image. Please check your local paramesters (e.g., directory path) when working on your own case.
+Note that the scipt should run successfully under provided docker image. Please check your local parameters (e.g., directory path) when working on your own application.
 
-#### Run Xmap locally on 4 cores with docker
-A simple example of how to run script locally.
+#### Run X-MAP locally on a machine with 4 cores using docker
+A simple example of how to run X-MAP locally.
 
 ```
 spark-submit --master local[4] \
     --py-files dist/xmap-0.1.0-py3.5.egg twodomain_demo.py
 ```
 
-#### Distributed case on a Cluster
-A simple example of how to run script on a Cluster.
+#### Run X-MAP on a distributed setup
+A simple example of how to run X-MAP on a Cluster.
 
 ```
 spark-submit 	--py-files xmap-0.1.0-py3.5.egg \
@@ -59,9 +59,9 @@ spark-submit 	--py-files xmap-0.1.0-py3.5.egg \
 				--driver-memory 12g --driver-cores 4 twodomain_demo.py
 ```
 
-## Advance Usage
-### Introduce other methodology
-Xmap can be easily extend to matrix factorization verision by using built-in MLlib in Spark. Please check a simplified example below:
+## Advanced Usage
+### Use publicly available library with AlterEgos
+X-MAP can be easily used with any publicly available library. We provide an example below for using Spark's built-in MLlib library with X-MAP.
 
 ```
 from pyspark.ml.evaluation import RegressionEvaluator
@@ -85,3 +85,5 @@ evaluator = RegressionEvaluator(...)
 rmse = evaluator.evaluate(predictions)
 print("Root-mean-square error = " + str(rmse))
 ```
+## Support
+Please raise potential bugs on `github`. If you have an open-ended or a research related question, you can use: [X-MAP group] (https://groups.google.com/forum/#!forum/x-map)
