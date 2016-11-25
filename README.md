@@ -1,4 +1,4 @@
-# X-<sub>MAP</sub>
+# X-<sub><sup>MAP</sup></sub>
 
 Xmap is the implementation of the paper `What You Might Like To Read After Watching Interstellar`. The system is built upon Apache Spark, and written by Python.
 
