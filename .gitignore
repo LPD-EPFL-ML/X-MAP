@@ -186,11 +186,11 @@ TSWLatexianTemp*
 
 # data
 data*
+metastore_db*
 
 # package build.
 xmap.egg-info*
 build*
-dist*
 
 # dropbox
 *.dropbox

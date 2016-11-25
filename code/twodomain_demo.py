@@ -41,7 +41,7 @@ if __name__ == '__main__':
     sc = SparkContext(conf=myconf)
     sqlContext = SQLContext(sc)
 
-    # # define parameters.
+    # define parameters.
     path_local = "/home/tlin/notebooks"
     path_para = join(path_local, "parameters.yaml")
     para = load_parameter(path_para)
@@ -131,3 +131,6 @@ if __name__ == '__main__':
         testRDD, simpair_dict_bd,
         user_based_dict_bd, item_based_dict_bd,
         user_info_bd, item_info_bd)
+
+    print('rmse alterEgo from source domain 1: {}'.format(mae))
+    sc.stop()

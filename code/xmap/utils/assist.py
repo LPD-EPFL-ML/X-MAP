@@ -23,15 +23,41 @@ def baseliner_split_data_pipeline(sc, split_tool, sourceRDD, targetRDD):
     overlap_userRDD = split_tool.find_overlap_user(sourceRDD, targetRDD)
     overlap_userRDD_bd = sc.broadcast(overlap_userRDD.collect())
 
-    non_overlap_sourceRDD, overlap_sourceRDD, \
-        non_overlap_targetRDD, overlap_targetRDD = split_tool.distinguish_data(
-            overlap_userRDD_bd, sourceRDD, targetRDD)
+    non_overlap_sourceRDD, overlap_sourceRDD = split_tool.distinguish_data(
+            overlap_userRDD_bd, sourceRDD)
+    non_overlap_targetRDD, overlap_targetRDD = split_tool.distinguish_data(
+            overlap_userRDD_bd, targetRDD)
+
     trainRDD, testRDD = split_tool.split_data(
         non_overlap_sourceRDD, overlap_sourceRDD,
         non_overlap_targetRDD, overlap_targetRDD)
 
     trainRDD, testRDD = trainRDD.cache(), testRDD.cache()
     return trainRDD, testRDD
+
+
+def baseliner_split_multidomain_data_pipeline(
+        sc, split_tool, sourceRDD1, sourceRDD2, targetRDD):
+    """a pipeline to clean the data."""
+    overlap_userRDD = split_tool.find_overlap_user_multidomain(
+        sourceRDD1, sourceRDD2, targetRDD)
+    overlap_userRDD_bd = sc.broadcast(overlap_userRDD.collect())
+
+    non_overlap_sourceRDD1, overlap_sourceRDD1 = split_tool.distinguish_data(
+            overlap_userRDD_bd, sourceRDD1)
+    non_overlap_sourceRDD2, overlap_sourceRDD2 = split_tool.distinguish_data(
+            overlap_userRDD_bd, sourceRDD2)
+    non_overlap_targetRDD, overlap_targetRDD = split_tool.distinguish_data(
+            overlap_userRDD_bd, targetRDD)
+
+    trainRDD1, trainRDD2, testRDD = split_tool.split_data_multipledomain(
+        non_overlap_sourceRDD1, overlap_sourceRDD1,
+        non_overlap_sourceRDD2, overlap_sourceRDD2,
+        non_overlap_targetRDD, overlap_targetRDD)
+
+    trainRDD1, trainRDD2, testRDD \
+        = trainRDD1.cache(), trainRDD2.cache(), testRDD.cache()
+    return trainRDD1, trainRDD2, testRDD
 
 
 def baseliner_calculate_sim_pipeline(sc, itemsim_tool, trainRDD):
@@ -115,7 +141,6 @@ def generator_pipeline(privatemap_tool, trainRDD, extended_simRDD, private):
     else:
         mapped_simRDD = privatemap_tool.cross_nonprivate_mapping(
             extended_simRDD)
-
     mapped_sim_dict = map_to_dict(mapped_simRDD)
     alterEgo_profile = privatemap_tool.build_alterEgo(
         trainRDD, mapped_sim_dict).cache()

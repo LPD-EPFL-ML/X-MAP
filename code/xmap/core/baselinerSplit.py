@@ -43,7 +43,7 @@ class BaselinerSplit:
         return sourceRDD1.keys().intersection(
             sourceRDD2.keys()).intersection(targetRDD.keys())
 
-    def distinguish_data(self, overlap_userRDD_bd, sourceRDD, targetRDD):
+    def distinguish_data(self, overlap_userRDD_bd, dataRDD):
         """Distinguish data from overlap data to non-overlap data."""
         def in_split(iterators):
             for line in iterators:
@@ -55,13 +55,10 @@ class BaselinerSplit:
                 if line[0] not in overlap_userRDD_bd.value:
                     yield line
 
-        overlap_sourceRDD = sourceRDD.mapPartitions(in_split)
-        non_overlap_sourceRDD = sourceRDD.mapPartitions(out_split)
-        overlap_targetRDD = targetRDD.mapPartitions(in_split)
-        non_overlap_targetRDD = targetRDD.mapPartitions(out_split)
+        overlap_dataRDD = dataRDD.mapPartitions(in_split)
+        non_overlap_dataRDD = dataRDD.mapPartitions(out_split)
 
-        return non_overlap_sourceRDD, overlap_sourceRDD, \
-            non_overlap_targetRDD, overlap_targetRDD
+        return overlap_dataRDD, non_overlap_dataRDD
 
     def determine_remaining(self, iterators):
         """split test dataset into (source, remain, remove).

@@ -74,6 +74,13 @@ class Generator:
                     new += weighted_pick(weights, left)
                 return st + new
 
+            def choose_format(input):
+                """check if a given input is a np.array. if it is, select."""
+                if type(input) == np.ndarray:
+                    return input[0]
+                else:
+                    return input
+
             for iid, lines in iter_items:
                 lines = sorted(lines, key=lambda x: - abs(x[1]))[: 10]
                 replacement_selection_list = [
@@ -87,7 +94,7 @@ class Generator:
                 choice = np.take(
                     list(map(lambda l: l[0], normalized_prob_pairs)),
                     index_choice)
-                yield iid, choice
+                yield iid, choose_format(choice)
         return rdd.mapPartitions(helper)
 
     def cross_nonprivate_mapping(self, rdd, topn=4):

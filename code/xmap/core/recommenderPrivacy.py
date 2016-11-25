@@ -148,7 +148,7 @@ class RecommenderPrivacy:
         """Use this function to get current items' priavte neighbor user.
         """
         pairs = sorted(pairs, key=lambda x: - abs(x[1][0]))
-        return pairs[: self.k]
+        return pairs[: self.mapping_range]
 
     def nonprivate_neighbor_selection(self, rdd):
         """a function to no-private select neighbor."""
