@@ -4,7 +4,7 @@ X-MAP is a large-scale heterogeneous recommender which is built on top of Apache
 
 ## Features
 - Provides heterogeneous recommendation based on artificial **AlterEgos** of users across multiple application domains.
-- Any recommendation algorithm can be run on using these AlterEgos.
+- Any classical homogeneous recommendation algorithm can be run in the target application domain using these AlterEgos.
 - Provides formal privacy guarantees.
 
 
@@ -21,27 +21,27 @@ Please refer to
 We also provide a docker image for your convenience.
 
 If you do not have `docker` and `docker-compose` installed on your machine, please check the [official configuration guidance](https://www.docker.com/products/overview) for installation guidelines.
-Otherwise, open your console, go to the `platform` folder, and execute the below-mentioned command to setup the corresponding docker image.
+Next, open the console, go to the `platform` folder, and execute the below-mentioned command to setup the corresponding docker image.
 
 ```
 docker-compose build
 ```
 
 ## Build
-Once you modify the scripts in `X-MAP` folder, you should rebuild the package using the following command:
+Once you have modified the scripts in `X-MAP` folder, you should rebuild the package using the following command:
 
 ```
 python setup.py install
 ```
 
-You will find an egg file, located in `dist/xmap-0.1.0-py3.5.egg`, that you will use for your application.
+We provide an egg file, located in `dist/xmap-0.1.0-py3.5.egg`, that you could use for your application.
 
 ## Running the tests
 ### Prerequisites
-X-MAP is tested on real-traces of [Amazon Dataset](https://snap.stanford.edu/data/web-Amazon.html). For current implementation, the input data follows the following format:
+X-MAP is tested on real-traces from [Amazon](https://snap.stanford.edu/data/web-Amazon.html). For current implementation, the input data follows the below-mentioned format:
 `<userid>\t<itemid>\t<rating>\t<timestamp>`.
 
-Note that the timestamp is required if you want to incorporate temporal behaviour which is also provided by the AlterEgos.
+Note that the timestamp is required if you want to implement algorithms incorporating temporal behaviour of users which is also supported by AlterEgos.
 
 ### Run X-MAP
 We provide here two demonstrations: `twodomain_demo.py` and `multidomain_demo.py`. You can also tune the parameters in the file `parameters.yaml`.
@@ -57,7 +57,7 @@ spark-submit --master local[4] \
 ```
 
 #### Run X-MAP on a distributed setup
-A simple example of how to run X-MAP on a Cluster.
+A simple example of how to run X-MAP on a cluster of machines.
 
 ```
 spark-submit 	--py-files xmap-0.1.0-py3.5.egg \
@@ -66,8 +66,8 @@ spark-submit 	--py-files xmap-0.1.0-py3.5.egg \
 ```
 
 ## Advanced Usage
-### Use publicly available library with AlterEgos
-X-MAP can be easily used with any publicly available library. We provide an example below for using Spark's built-in MLlib library with X-MAP.
+### Use any publicly available recommender library with AlterEgos
+X-MAP can be easily used with any publicly available recommender library. We provide an example below for using Spark's built-in MLlib library with X-MAP.
 
 ```
 from pyspark.ml.evaluation import RegressionEvaluator
