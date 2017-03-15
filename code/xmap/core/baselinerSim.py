@@ -155,8 +155,9 @@ class BaselinerSim:
         iid1, iid2 = item_pair
         rating_x = np.array([rating_pair[0] for rating_pair in rating_pairs])
         rating_y = np.array([rating_pair[1] for rating_pair in rating_pairs])
-        average = np.array([user_info.value[rating_pair[2]][0]
-                            for rating_pair in rating_pairs])
+        average = np.array(
+            [user_info.value[rating_pair[2]][0]
+             for rating_pair in rating_pairs])
 
         num_overlap_rating = len(average)
         inner_product = np.sum((rating_x - average) * (rating_y - average))
@@ -179,6 +180,7 @@ class BaselinerSim:
             for uid, pairs in iterations:
                 for item1, item2 in combinations(pairs, 2):
                     yield ((item1[0], item2[0]), [(item1[1], item2[1], uid)])
+                    yield ((item2[0], item1[0]), [(item2[1], item1[1], uid)])
         return dataRDD.filter(
             lambda line: len(line[1]) >= 2).mapPartitions(helper)
 
@@ -208,9 +210,9 @@ class BaselinerSim:
         pairwiseItemsRDD = self.produce_pairwise_items(
             dataRDD).reduceByKey(lambda a, b: a + b)
 
-        if "cosine" in self.method:
+        if "cosine" == self.method:
             return pairwiseItemsRDD.mapPartitions(cosine_helper)
-        elif "ad_cos" in self.method:
+        elif "adjust_cosine" == self.method:
             return pairwiseItemsRDD.mapPartitions(adjusted_cosine_helper)
 
     def get_item_sim(self, dataRDD):
@@ -226,7 +228,7 @@ class BaselinerSim:
             """
             for (iid1, iid2), (sim, mutu, frac_mutu, label) in iters:
                 yield iid1, [(iid2, sim, mutu, frac_mutu)]
-                yield iid2, [(iid1, sim, mutu, frac_mutu)]
+                # yield iid2, [(iid1, sim, mutu, frac_mutu)]
         return dataRDD.mapPartitions(
             key_on_first_item).reduceByKey(lambda a, b: a + b)
 
@@ -235,11 +237,8 @@ class BaselinerSim:
         def helper(line):
             """helper function."""
             iid, info = line
-            return [Row(
-                        id1=iid[0], id2=iid[1],
-                        sim=float(info[0]), mutu=info[1],
-                        frac_mutu=float(info[2]), label=info[3]),
-                    Row(id1=iid[1], id2=iid[0],
-                        sim=float(info[0]), mutu=info[1],
-                        frac_mutu=float(info[2]), label=info[3])]
-        return sim_pairsRDD.flatMap(helper).toDF()
+            return Row(
+                id1=iid[0], id2=iid[1],
+                sim=float(info[0]), mutu=info[1],
+                frac_mutu=float(info[2]), label=info[3])
+        return sim_pairsRDD.map(helper).toDF()

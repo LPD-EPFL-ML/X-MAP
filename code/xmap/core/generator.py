@@ -111,7 +111,7 @@ class Generator:
         return rdd.mapPartitions(helper)
 
     def mapping_item(self, line, mapping_dict):
-        """Use traini.
+        """map source item to target item.
         Args:
             line: in the form of (uid, iid, rating, rating time).
             mapping_dict: {source item: target item}.
@@ -120,8 +120,25 @@ class Generator:
         return (line[0], mapping_dict[line[1]], line[2], line[3]) \
             if line[1] in mapping_dict else None
 
+    def avoid_duplicate_ratings(self, alterEgo):
+        """."""
+        def helper(lines):
+            uid, info = lines
+            compress = dict()
+            for line in info:
+                tmp = compress.get(line[0], [])
+                tmp.append(line)
+                compress[line[0]] = tmp
+            return [(uid, iid, np.mean([x[1] for x in val]), val[0][2])
+                    for iid, val in compress.items()]
+
+        user_based_alterEgo = alterEgo.map(
+            lambda line: (line[0], [(line[1], line[2], line[3])])).reduceByKey(
+            lambda a, b: a + b).flatMap(helper)
+        return user_based_alterEgo
+
     def build_alterEgo(self, trainRDD, mapping_dict):
-        """use this function to build alterEgo profile.
+        """build alterEgo profile.
         Args:
             rdd: training dataset, contains source/target domain item,
                 in the form of `iid, rating, rating time.`
@@ -135,5 +152,6 @@ class Generator:
         alterEgo_profile = dataRDD.map(
             lambda line: self.mapping_item(line, mapping_dict)).filter(
             lambda line: line is not None)
+        alterEgo_profile = self.avoid_duplicate_ratings(alterEgo_profile)
         return dataRDD.filter(
             lambda line: "T:" in line[1]).union(alterEgo_profile)

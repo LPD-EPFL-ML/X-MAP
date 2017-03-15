@@ -21,69 +21,14 @@ class RecommenderPrediction:
             i.e., < 0 or > 5, then, adjust it to the closest bound.
         """
         return 1.0 * max(0, min(int(rating + 0.5), 5))
-
-    def user_based_prediction(self, line, rating_bd, sim_bd, user_bd):
-        """Use this function to predict the rating of item for this user.
-        Args:
-            line: (uid, pairs)
-                where pairs in the format of (iid, rating, time)*
-            rating_bd: broadcast of {uid: [(iid1, rating1, time1)*]}*
-            sim_bd: broadcast of {uid: [(uid, sim)*]}*
-            user_bd: broadcast pf {uid: (average, norm, count)}*
-        """
-        def prediction(pair, uid_allneighbor_info, user_bd, uid):
-            """do the prediction. It can either add decay rate or not,
-                which is decided by `method`.
-            Args:
-                pair: (iid, rating, time)
-                uid_allneighbor_info: (uid, sim, rating_record)*
-                average_uid: average rating of current uid.
-            """
-            iid, real_rating, time = pair
-            average_uid_rating = user_bd.value[uid][0]
-            sim_rating = []
-            for info in uid_allneighbor_info:
-                uid, sim, ratings = info
-                sim_rating += [
-                    (rating[0], sim, rating[1] - average_uid_rating)
-                    for rating in ratings if iid in rating[0]]
-
-            if len(sim_rating) != 0:
-                sim_rating = [
-                    (line[0], line[1] * line[2], abs(line[1]))
-                    for line in sim_rating]
-                predicted_rating = average_uid_rating + sum(
-                    map(lambda line: line[1], sim_rating)) / sum(
-                    map(lambda line: line[2], sim_rating))
-            else:
-                predicted_rating = average_uid_rating
-            return iid, real_rating, self.bound_rating(predicted_rating)
-
-        uid, pairs = line
-        uid_allneighbor_info = [
-            (u[0], u[1], rating_bd.value[u[0]]) for u in sim_bd.value[uid]]
-        return uid, [prediction(
-            pair, uid_allneighbor_info, user_bd, uid) for pair in pairs]
-
-    def user_based_recommendation(
-            self, test_dataRDD,
-            user_based_dict_bd, userbased_sim_pair_dict_bd, user_info_bd):
-        """user-based recommendation.
-            For privacy protection purpose, no decay rate is allowed.
-        """
-        sim_pair_dict_keys = set(userbased_sim_pair_dict_bd.value.keys())
-        return test_dataRDD.filter(
-            lambda line: line[0] in sim_pair_dict_keys).map(
-            lambda line: self.user_based_prediction(
-                line, user_based_dict_bd,
-                userbased_sim_pair_dict_bd, user_info_bd))
+        # return 1.0 * max(0, min(rating, 5))
 
     def item_based_prediction(self, line, rating_bd, sim_bd, item_bd):
         """predict the rating of item for a specific user.
         Args:
             line: (uid, pairs),
                 where pairs: in the format of (iid, rating, time)*
-            rating_bd: broadcast of {uid: [(iid1, rating1, time1)*]}
+            rating_bd: broadcast of {iid: [(uid1, rating1, time1)*]}
             sim_bd: broadcast of {iid: [(iid, sim)*]}
             item_bd: broadcast of {iid: (average, norm, length)}
         """
@@ -132,9 +77,10 @@ class RecommenderPrediction:
             average_iid_rating = item_bd.value[iid][0]
             sim_rating = []
             for info in iid_neighbors:
+                niid, nsim, ratings = info
                 sim_rating += [
-                    (iid, info[1], i[1] - item_bd.value[info[0]][0], i[2])
-                    for i in info[2] if uid in i[0]]
+                    (iid, nsim, rating[1] - item_bd.value[niid][0], rating[2])
+                    for rating in ratings if uid in rating[0]]
             if len(sim_rating) != 0:
                 sim_ratings = [
                     (line[1] * line[2], abs(line[1]), line[3])
@@ -173,6 +119,8 @@ class RecommenderPrediction:
             uid, pairs = line
             return uid, [
                 abs(pair[1] - pair[index]) for pair in pairs if pair is not ()]
+
+        print(rdd.take(1))
 
         if "user" in self.method:
             result = rdd.map(helper).map(

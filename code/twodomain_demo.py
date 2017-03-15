@@ -14,6 +14,7 @@ from xmap.core.recommenderSim import RecommenderSim
 from xmap.core.recommenderPrivacy import RecommenderPrivacy
 from xmap.core.recommenderPrediction import RecommenderPrediction
 
+from xmap.utils.assist import write_to_disk
 from xmap.utils.assist import load_parameter
 from xmap.utils.assist import baseliner_clean_data_pipeline
 from xmap.utils.assist import baseliner_split_data_pipeline
@@ -73,11 +74,11 @@ if __name__ == '__main__':
 
     sourceRDD = baseliner_clean_data_pipeline(
         sc, baseliner_cleansource_tool,
-        path_raw_movie,
+        path_raw_book,
         para['init']['is_debug'], para['init']['num_partition'])
     targetRDD = baseliner_clean_data_pipeline(
         sc, baseliner_cleantarget_tool,
-        path_raw_book,
+        path_raw_movie,
         para['init']['is_debug'], para['init']['num_partition'])
 
     trainRDD, testRDD = baseliner_split_data_pipeline(
@@ -132,5 +133,8 @@ if __name__ == '__main__':
         user_based_dict_bd, item_based_dict_bd,
         user_info_bd, item_info_bd)
 
-    print('rmse alterEgo from source domain 1: {}'.format(mae))
+    results = {
+        "mae": mae
+    }
+    write_to_disk(results, para, join(path_local, "data", "output"))
     sc.stop()

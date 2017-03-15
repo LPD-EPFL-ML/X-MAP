@@ -91,5 +91,6 @@ evaluator = RegressionEvaluator(...)
 rmse = evaluator.evaluate(predictions)
 print("Root-mean-square error = " + str(rmse))
 ```
+
 ## Support
-Please raise potential bugs on [github] (https://github.com/LPD-EPFL-ML/X-MAP/issues). If you have an open-ended or a research related question, you can post it on: [X-MAP group] (https://groups.google.com/forum/#!forum/x-map).
+Please raise potential bugs on [github](https://github.com/LPD-EPFL-ML/X-MAP/issues). If you have an open-ended or a research related question, you can post it on: [X-MAP group](https://groups.google.com/forum/#!forum/x-map).

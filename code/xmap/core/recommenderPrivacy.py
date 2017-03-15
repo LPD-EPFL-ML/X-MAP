@@ -28,7 +28,7 @@ class RecommenderPrivacy:
             for id_pair, info_pair in iters:
                 id1, id2 = id_pair
                 yield id1, [(id2, info_pair)]
-                yield id2, [(id1, info_pair)]
+                # yield id2, [(id1, info_pair)]
         return dataRDD.mapPartitions(
             key_on_first_item).reduceByKey(lambda a, b: a + b)
 
@@ -89,7 +89,8 @@ class RecommenderPrivacy:
             for line in zip(lines, replacement_selection_list):
                 tmp = 1.0 * np.exp(
                     self.privacy_epsilon * line[0][1][0] / (
-                        2 * self.mapping_range * line[1][1]))
+                        2 * self.mapping_range * line[1][1])
+                    )
                 probs.append((line[0][0], tmp))
             return probs
 

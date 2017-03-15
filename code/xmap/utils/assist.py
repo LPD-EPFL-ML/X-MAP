@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """An auxilary file for xmap."""
 import yaml
+import time
+from os.path import join
+from os import makedirs
 
 
 def baseliner_clean_data_pipeline(
@@ -23,10 +26,10 @@ def baseliner_split_data_pipeline(sc, split_tool, sourceRDD, targetRDD):
     overlap_userRDD = split_tool.find_overlap_user(sourceRDD, targetRDD)
     overlap_userRDD_bd = sc.broadcast(overlap_userRDD.collect())
 
-    non_overlap_sourceRDD, overlap_sourceRDD = split_tool.distinguish_data(
-            overlap_userRDD_bd, sourceRDD)
-    non_overlap_targetRDD, overlap_targetRDD = split_tool.distinguish_data(
-            overlap_userRDD_bd, targetRDD)
+    overlap_sourceRDD, non_overlap_sourceRDD = split_tool.distinguish_data(
+        overlap_userRDD_bd, sourceRDD)
+    overlap_targetRDD, non_overlap_targetRDD = split_tool.distinguish_data(
+        overlap_userRDD_bd, targetRDD)
 
     trainRDD, testRDD = split_tool.split_data(
         non_overlap_sourceRDD, overlap_sourceRDD,
@@ -43,12 +46,12 @@ def baseliner_split_multidomain_data_pipeline(
         sourceRDD1, sourceRDD2, targetRDD)
     overlap_userRDD_bd = sc.broadcast(overlap_userRDD.collect())
 
-    non_overlap_sourceRDD1, overlap_sourceRDD1 = split_tool.distinguish_data(
-            overlap_userRDD_bd, sourceRDD1)
-    non_overlap_sourceRDD2, overlap_sourceRDD2 = split_tool.distinguish_data(
-            overlap_userRDD_bd, sourceRDD2)
-    non_overlap_targetRDD, overlap_targetRDD = split_tool.distinguish_data(
-            overlap_userRDD_bd, targetRDD)
+    overlap_sourceRDD1, non_overlap_sourceRDD1 = split_tool.distinguish_data(
+        overlap_userRDD_bd, sourceRDD1)
+    overlap_sourceRDD2, non_overlap_sourceRDD2 = split_tool.distinguish_data(
+        overlap_userRDD_bd, sourceRDD2)
+    overlap_targetRDD, non_overlap_targetRDD = split_tool.distinguish_data(
+        overlap_userRDD_bd, targetRDD)
 
     trainRDD1, trainRDD2, testRDD = split_tool.split_data_multipledomain(
         non_overlap_sourceRDD1, overlap_sourceRDD1,
@@ -226,3 +229,16 @@ def load_parameter(path):
     """load parameter from file."""
     with open(path, 'rb') as f:
         return yaml.load(f)
+
+
+def write_to_disk(results, out_dict, path):
+    """write result to path."""
+    timestamp = str(int(time.time()))
+    out_folder = join(path, "runs", timestamp)
+    makedirs(out_folder)
+    out_path = join(out_folder, "info.yaml")
+
+    out_dict['result'] = results
+
+    with open(out_path, 'w')as yaml_file:
+        yaml_file.write(yaml.dump(out_dict, default_flow_style=False))

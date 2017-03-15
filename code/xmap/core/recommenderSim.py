@@ -57,17 +57,18 @@ class RecommenderSim:
 
         def helper(line):
             """a helper function."""
-            uid, ratings = line
-            return uid, (average(ratings), norm2(ratings), len(ratings))
+            id, ratings = line
+            return id, (average(ratings), norm2(ratings), len(ratings))
         return dataRDD.map(helper)
 
     def produce_pairwise(self, dataRDD):
         """produce pairwise."""
         def helper(iters):
-            """find item pairs."""
-            for uid, ratings in iters:
-                for item1, item2 in combinations(ratings, 2):
-                    yield (item1[0], item2[0]), [(item1[1], item2[1], uid)]
+            """find pairs."""
+            for id, ratings in iters:
+                for x1, x2 in combinations(ratings, 2):
+                    yield (x1[0], x2[0]), [(x1[1], x2[1], id)]
+                    yield (x2[0], x1[0]), [(x2[1], x1[1], id)]
         return dataRDD.filter(
             lambda line: len(line[1]) >= 2).mapPartitions(
             helper).reduceByKey(
@@ -123,12 +124,12 @@ class RecommenderSim:
         inner_product = sum(map(lambda line: line[2], ratings))
         norm_x = info.value[id1][1]
         norm_y = info.value[id2][1]
-        cos_sim = self.significance_weighting(
+        cosine_sim = self.significance_weighting(
             self.cosine(inner_product, norm_x * norm_y), num_overlap_rating)
         local_sensitivity = get_local_sensitivity(
-            cos_sim, ratings, inner_product,
+            cosine_sim, ratings, inner_product,
             [norm_x, norm_y], num_overlap_rating)
-        return (id1, id2), [cos_sim, local_sensitivity]
+        return (id1, id2), [cosine_sim, local_sensitivity]
 
     def adjusted_cosine_sim(self, line, info):
         """return ajusted cosine similarity measure, along with co_raters_count
@@ -188,15 +189,7 @@ class RecommenderSim:
             pair_wise = self.produce_pairwise(user_profile)
             return pair_wise.map(
                 lambda line: self.cosine_sim(line, item_info))
-        elif "cosine_user" in self.method:
-            pair_wise = self.produce_pairwise(item_profile)
-            return pair_wise.map(
-                lambda line: self.cosine_sim(line, user_info))
         elif "adjust_cosine_item" in self.method:
             pair_wise = self.produce_pairwise(user_profile)
             return pair_wise.map(
                 lambda line: self.adjusted_cosine_sim(line, user_info))
-        elif "adjust_cosine_user" in self.method:
-            pair_wise = self.produce_pairwise(item_profile)
-            return pair_wise.map(
-                lambda line: self.adjusted_cosine_sim(line, item_info))

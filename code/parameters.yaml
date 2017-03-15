@@ -14,20 +14,20 @@ baseliner:
     num_left: 0
     ratio_split: 0.2
     ratio_both: 0.8
-    calculate_baseline_sim_method: ad_cos
+    calculate_baseline_sim_method: adjust_cosine
     calculate_baseline_weighting: 50
 extender:
     extend_among_topk: 10
 generator:
-    private_flag: True
+    private_flag: False
     mapping_range: 1
     private_epsilon: 0.6
     private_rpo: 0.1
 recommender:
-    calculate_xmap_sim_method: cosine_user
+    calculate_xmap_sim_method: cosine_item
     calculate_xmap_weighting: 50
     mapping_range: 10
-    private_flag: True
+    private_flag: False
     private_epsilon: 0.6
     private_rpo: 0.1
     decay_alpha: 0.03
