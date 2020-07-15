@@ -5,3 +5,7 @@ services:
             context: .
             dockerfile: Dockerfile
         image: itamtao/spark
+        ports:
+            - "8888:8888"
+        volumes: 
+            - ../:/home/tlin/notebooks

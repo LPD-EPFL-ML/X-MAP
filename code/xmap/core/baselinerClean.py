@@ -42,14 +42,39 @@ class BaselinerClean:
         Returns:
             (uid, [iid + domain_label, rating, datetime])
         """
+        record = {}
         for line in iterators:
-            splitted_line = re.split('\\s+', line)
-            parsed_time = self.parse_time(splitted_line[3])
-            if parsed_time.year in self.period:
-                yield (
-                    splitted_line[0], (
-                        splitted_line[1] + self.label,
-                        float(splitted_line[2]), parsed_time))
+            line = line.strip()
+            colonPos = line.find(':')
+            # If end of JSON record is reached
+            if colonPos == -1:
+                # At this point we should have a complete record
+                # Check if record has required fields
+                if ("review/time" in record 
+                    and "product/productId" in record
+                    and "review/score" in record
+                    and "review/time" in record):
+                    time = self.parse_time(record["review/time"])
+
+                    # Now, the line needs to be in the period of time we care about
+                    if (time.year in self.period):
+                        yield(
+                            # UID
+                            record["review/time"],
+                                # [iid + domain_label, rating, datetime]
+                                (
+                                    record["product/productId"] + self.label,
+                                    float(review["review/score"]),
+                                    record["review/time"]
+                                ))
+                    record = {}
+                    continue
+                else:
+                    # Record does not have required data
+                    record = {}
+                    continue
+            
+
 
     def parse_data(self, originalRDD):
         """parse the dataset."""
