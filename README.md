@@ -1,3 +1,5 @@
+Updated to work with the newer dataset. The input format for this used to be a tab-seperated text file, the dataset is now distributed in a different format 
+
 # X-MAP: Heterogeneous Recommendation at Large-Scale
 
 X-MAP is a large-scale heterogeneous recommender which is built on top of Apache Spark and implemented in Python.

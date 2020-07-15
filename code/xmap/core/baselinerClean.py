@@ -53,19 +53,19 @@ class BaselinerClean:
                 if ("review/time" in record 
                     and "product/productId" in record
                     and "review/score" in record
-                    and "review/time" in record):
+                    and "review/userId" in record):
                     time = self.parse_time(record["review/time"])
 
                     # Now, the line needs to be in the period of time we care about
                     if (time.year in self.period):
                         yield(
                             # UID
-                            record["review/time"],
+                            record["review/userId"],
                                 # [iid + domain_label, rating, datetime]
                                 (
                                     record["product/productId"] + self.label,
                                     float(review["review/score"]),
-                                    record["review/time"]
+                                    time
                                 ))
                     record = {}
                     continue
