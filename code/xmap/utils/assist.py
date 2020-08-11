@@ -2,18 +2,14 @@
 """An auxilary file for xmap."""
 import yaml
 import time
-import pyspark
 from os.path import join
 from os import makedirs
-from pyspark.sql.session import SparkSession
 
 
 def baseliner_clean_data_pipeline(
         sc, clean_tool, path_rawdata, is_debug, num_partition):
     """a pipeline to clean the data."""
-    # Modification: updated dataset is in CSV and not TSV
-    spark = SparkSession(sc)
-    dataRDD = spark.read.csv(path_rawdata).rdd
+    dataRDD = sc.textFile(path_rawdata, 30)
     parsedRDD = clean_tool.parse_data(dataRDD)
     filteredRDD = clean_tool.filter_data(parsedRDD)
     cleanedRDD = clean_tool.clean_data(filteredRDD).cache()

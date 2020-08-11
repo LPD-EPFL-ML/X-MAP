@@ -1,12 +1,7 @@
 init:
     path_hdfs: file:/home/tlin/notebooks/data
-<<<<<<< HEAD
     path_movie: processed/Movies.tsv
     path_book: processed/Books.tsv
-=======
-    path_movie: Movies_and_TV.csv
-    path_book: Books.csv
->>>>>>> 0adef90ce0dba600f05110854eac9411ff2051d6
     path_music: raw/music.txt
     is_debug: True
     seed: 666666
@@ -35,4 +30,4 @@ recommender:
     private_flag: False
     private_epsilon: 0.6
     private_rpo: 0.1
-    decay_alpha: 0.03
+    decay_alpha: 0.02
