@@ -5,3 +5,5 @@ services:
             context: .
             dockerfile: Dockerfile
         image: itamtao/spark
+        volumes:
+            - ../:/home/tlin/code
