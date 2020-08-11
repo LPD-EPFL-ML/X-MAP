@@ -1,7 +1,7 @@
 init:
     path_hdfs: file:/home/tlin/notebooks/data
-    path_movie: raw/movie.txt
-    path_book: raw/book.txt
+    path_movie: processed/Movies.tsv
+    path_book: processed/Books.tsv
     path_music: raw/music.txt
     is_debug: True
     seed: 666666
