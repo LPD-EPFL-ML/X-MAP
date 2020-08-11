@@ -2,7 +2,7 @@ build_package:
 	python setup.py install
 
 run_demo:
-	spark-submit --master local[8] \
+	spark-submit --master local[16] \
 	    --py-files dist/xmap-0.1.0-py3.8.egg twodomain_demo.py
 
 upload_server:
