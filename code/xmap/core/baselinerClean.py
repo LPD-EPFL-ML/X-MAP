@@ -43,6 +43,17 @@ class BaselinerClean:
             (uid, [iid + domain_label, rating, datetime])
         """
         for line in iterators:
+            # Parser modification for the new dataset
+            time = self.parse_time(line[3])
+            if time.year in self.period:
+                yield(
+                    #uid
+                    line[1], (
+                        # iid+domain_label
+                        line[0] + self.label,
+                        float(line[2]), # Rating
+                        time))
+            """ Previous parser for TSV
             splitted_line = re.split('\\s+', line)
             parsed_time = self.parse_time(splitted_line[3])
             if parsed_time.year in self.period:
@@ -50,7 +61,7 @@ class BaselinerClean:
                     splitted_line[0], (
                         splitted_line[1] + self.label,
                         float(splitted_line[2]), parsed_time))
-
+            """
     def parse_data(self, originalRDD):
         """parse the dataset."""
         return originalRDD.mapPartitions(self.parse_line)
