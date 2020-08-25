@@ -1,33 +1,97 @@
 init:
+    # Base path for X-MAP
     path_hdfs: file:/home/tlin/notebooks/data
-    path_movie: raw/movie.txt
-    path_book: raw/book.txt
+    # Movie dataset (twodomain and multidomain demo)
+    path_movie: processed/Movies.tsv
+    # Book dataset (twodomain and multidomain demo)
+    path_book: processed/Books.tsv
+    # Music dataset (multidomain demo only)
     path_music: raw/music.txt
+    
+    # Debug flag
     is_debug: True
+
+    # Seed value used by BaselinerSplit
     seed: 666666
+
+    # Number of partitions to use by baseliner_clean_data_pipeline
+    # This partitioned dataset is used when is_debug is true
+    # See assist.py line 18
     num_partition: 30
+
 baseliner:
+    # Rating has to be at least this value
     num_atleast_rating: 5
+
+    # The number of observations we want to choose
     size_subset: 6666
+
+    # Start and end dates
     date_from: 2012
     date_to: 2013
+    
+    # num_left:
+    #     For each overlap user, if we choose hide current user's rating
+    #     in the target domain, then this value will be used to determine
+    #     whether we should hide all information (cold-start)
+    #     or hide partial information (sparsity).
     num_left: 0
+
+    #ratio_split:
+    #    It will split the original overlap dataset to two parts
+    #    (ratio_split, 1 - ratio_split).
+    #    To be noticed that:
+    #      1. non-overlap data: do nothing.
+    #      2. overlap data:
+    #        (1 Training: hide target domain's rating based on num_left.
+    #        (2 Test: use this part for evaluation.    
     ratio_split: 0.2
+
+    # ratio_both:
+    #     its value \in [0.2, 1 - ratio_split].
+    #     overlap users will keep their ratings in each domain.
     ratio_both: 0.8
+
+    # There are two available methods in the baselinerSim.py file:
+    # if "cosine" == self.method:
+    #     return pairwiseItemsRDD.mapPartitions(cosine_helper)
+    # elif "adjust_cosine" == self.method:
+    #     return pairwiseItemsRDD.mapPartitions(adjusted_cosine_helper)
     calculate_baseline_sim_method: adjust_cosine
+
     calculate_baseline_weighting: 50
+
 extender:
+    # "top k": define the size of most similar neighbor.
     extend_among_topk: 10
-generator:
-    private_flag: False
+
+generator: 
+    # Enable or disable privacy  
+    private_flag: True
+    # mapping_range: the size of neighborhood used for mapping.
     mapping_range: 1
+    # privacy_epsilon: the level of privacy
     private_epsilon: 0.6
+    # used to control the accuracy of modification.
     private_rpo: 0.1
+
 recommender:
-    calculate_xmap_sim_method: cosine_item
+    # Allows cosine_item or adjust_cosine_item
+    calculate_xmap_sim_method: adjust_cosine_item
     calculate_xmap_weighting: 50
+    
+    # mapping_range: The size of private neighborhood.
     mapping_range: 10
-    private_flag: False
+    
+    # Enable or disable privacy
+    private_flag: True
+    
+    # privacy_epsilon: The level of privacy.
     private_epsilon: 0.6
+    
+    # rpo: used to control the accuracy of modification.
     private_rpo: 0.1
-    decay_alpha: 0.03
+
+    # alpha: parameter that used to define temporal Relevance,
+    # control the decaying rate.
+    decay_alpha: 0.02
