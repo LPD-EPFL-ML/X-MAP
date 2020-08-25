@@ -1,11 +1,16 @@
 init:
     # Base path for X-MAP
     path_hdfs: file:/home/tlin/notebooks/data
+<<<<<<< HEAD
     # Movie dataset (twodomain and multidomain demo)
     path_movie: processed/Movies.tsv
     # Book dataset (twodomain and multidomain demo)
     path_book: processed/Books.tsv
     # Music dataset (multidomain demo only)
+=======
+    path_movie: processed/Movies.tsv
+    path_book: processed/Books.tsv
+>>>>>>> b263550498fc4d54e9e1303c30dab113c1a5067b
     path_music: raw/music.txt
     
     # Debug flag

@@ -188,6 +188,9 @@ TSWLatexianTemp*
 data*
 metastore_db*
 
+# Cache
+cache*
+
 # package build.
 xmap.egg-info*
 build*

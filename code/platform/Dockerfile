@@ -1,4 +1,4 @@
-FROM jupyter/pyspark-notebook
+FROM jupyter/pyspark-notebook:749017d878d6
 
 MAINTAINER Tao Lin <itamtao@gmail.com>
 

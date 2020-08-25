@@ -82,7 +82,7 @@ def extender_pipeline(
     item2item_simDF = itemsim_tool.build_sim_DF(item2item_simRDD)
     item2item_simDF.registerTempTable("sim_table")
     BB_item_list = sqlContext.sql(
-        "SELECT DISTINCT id1 FROM sim_table WHERE label = 1").map(
+        "SELECT DISTINCT id1 FROM sim_table WHERE label = 1").rdd.map(
         lambda line: line.id1).collect()
     BB_item_bd = sc.broadcast(BB_item_list)
 
