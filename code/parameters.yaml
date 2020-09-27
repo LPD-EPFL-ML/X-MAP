@@ -1,6 +1,6 @@
 init:
     # Base path for X-MAP
-    path_hdfs: file:/home/tlin/notebooks/data
+    path_hdfs: file:/opt/spark-apps/code/data
     # Movie dataset (twodomain and multidomain demo)
     path_movie: processed/Movies.tsv
     # Book dataset (twodomain and multidomain demo)
