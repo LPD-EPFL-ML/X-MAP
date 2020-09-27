@@ -15,17 +15,21 @@ if __name__ == '__main__':
         "xmap recommendation: split data components")
     sc = SparkContext(conf=myconf)
 
-    # define parameters.
-    path_root = "file:/home/tlin/notebooks/data"
-    path_pickle_movie = join(path_root, "cache/two_domain/clean_data/movie")
-    path_pickle_book = join(path_root, "cache/two_domain/clean_data/book")
-    path_pickle_train = join(path_root, "cache/two_domain/split_data/train")
-    path_pickle_test = join(path_root, "cache/two_domain/split_data/test")
+    # Refactor: use the actual paramaters file
+    path_local = "/opt/spark_apps/code"
+    path_para = join(path_local, "parameters.yaml")
+    para = load_parameter(path_para)
 
-    num_left = 0
-    ratio_split = 0.2
-    ratio_both = 0.8
-    seed = 666
+    # define parameters.
+    path_pickle_movie = join(para['init']['path_hdfs'], "cache/two_domain/clean_data/movie")
+    path_pickle_book = join(para['init']['path_hdfs'], "cache/two_domain/clean_data/book")
+    path_pickle_train = join(para['init']['path_hdfs'], "cache/two_domain/split_data/train")
+    path_pickle_test = join(para['init']['path_hdfs'], "cache/two_domain/split_data/test")
+
+    num_left = para['baseliner']['num_left']
+    ratio_split = para['baseliner']['ratio_split']
+    ratio_both = para['baseliner']['ratio_both']
+    seed = para['init']['seed']
 
     # A demo for the class.
     movieRDD = sc.pickleFile(path_pickle_movie)

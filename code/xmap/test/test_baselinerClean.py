@@ -14,12 +14,16 @@ if __name__ == '__main__':
         "xmap recommendation: clean data components")
     sc = SparkContext(conf=myconf)
 
-    # define parameters.
-    path_root = "file:/home/tlin/notebooks/data"
-    path_raw_movie = join(path_root, "raw/movie.txt")
-    path_raw_book = join(path_root, "raw/movie.txt")
-    path_pickle_movie = join(path_root, "cache/two_domain/clean_data/movie")
-    path_pickle_book = join(path_root, "cache/two_domain/clean_data/book")
+    # Refactor: use the actual paramaters file
+    path_local = "/opt/spark_apps/code"
+    path_para = join(path_local, "parameters.yaml")
+    para = load_parameter(path_para)
+
+    path_raw_movie = join(para['init']['path_hdfs'], para['init']['path_movie'])
+    path_raw_book = join(para['init']['path_hdfs'], para['init']['path_book'])
+
+    path_pickle_movie = join(para['init']['path_hdfs'], "cache/two_domain/clean_data/movie")
+    path_pickle_book = join(para['init']['path_hdfs'], "cache/two_domain/clean_data/book")
 
     num_atleast_rating = 5
     num_observation = 66666
@@ -27,12 +31,16 @@ if __name__ == '__main__':
     date_to = 2013
 
     # A demo for the class.
-    clean_source_tool = BaselinerClean(
-        num_atleast_rating, num_observation,
-        date_from, date_to, domain_label="S:")
-    clean_target_tool = BaselinerClean(
-        num_atleast_rating, num_observation,
-        date_from, date_to, domain_label="T:")
+    baseliner_cleansource_tool = BaselinerClean(
+        para['baseliner']['num_atleast_rating'],
+        para['baseliner']['size_subset'],
+        para['baseliner']['date_from'],
+        para['baseliner']['date_to'], domain_label="S:")
+    baseliner_cleantarget_tool = BaselinerClean(
+        para['baseliner']['num_atleast_rating'],
+        para['baseliner']['size_subset'],
+        para['baseliner']['date_from'],
+        para['baseliner']['date_to'], domain_label="T:")
 
     cleaned_movieRDD = baseliner_clean_data_pipeline(
         sc, clean_source_tool, path_raw_movie)
