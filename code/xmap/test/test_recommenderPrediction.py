@@ -20,9 +20,13 @@ if __name__ == '__main__':
     sc = SparkContext(conf=myconf)
     sqlContext = SQLContext(sc)
 
+    # Refactor: use the actual paramaters file
+    path_local = "/opt/spark_apps/code"
+    path_para = join(path_local, "parameters.yaml")
+    para = load_parameter(path_para)
+
     # define parameters.
-    path_roots = "/home/tlin/notebooks/data"
-    path_root = "file:/home/tlin/notebooks/data"
+    path_root = para['init']['path_hdfs']
     path_pickle_train = join(path_root, "cache/two_domain/split_data/train")
     path_pickle_test = join(path_root, "cache/two_domain/split_data/test")
     path_pickle_baseline_sim = join(
@@ -47,9 +51,9 @@ if __name__ == '__main__':
         path_root, "cache/two_domain/policy/policy_itembased_sim")
 
     path_txt_userbased_mae = join(
-        path_roots, "cache/two_domain/recommendation/userbased_mae.txt")
+        path_root, "cache/two_domain/recommendation/userbased_mae.txt")
     path_txt_itembased_mae = join(
-        path_roots, "cache/two_domain/recommendation/itembased_mae.txt")
+        path_root, "cache/two_domain/recommendation/itembased_mae.txt")
 
     # load data.
     trainRDD = sc.pickleFile(path_pickle_train).cache()

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""call different components and do two domain recommendation."""
+"""call different components and do two domain recommendation.
+twodomain_prep runs all of the components except for the reccomender, 
+such that all of the RDDs involved can be cached. This makes testing much 
+easier
+"""
 
 from os.path import join
 from pyspark import SparkContext, SparkConf
@@ -72,20 +76,6 @@ if __name__ == '__main__':
         para['baseliner']['calculate_baseline_sim_method'],
         para['baseliner']['calculate_baseline_weighting'])
 
-    """
-    sourceRDD = baseliner_clean_data_pipeline(
-        sc, baseliner_cleansource_tool,
-        path_raw_book,
-        para['init']['is_debug'], para['init']['num_partition'])
-    targetRDD = baseliner_clean_data_pipeline(
-        sc, baseliner_cleantarget_tool,
-        path_raw_movie,
-        para['init']['is_debug'], para['init']['num_partition'])
-        print("=== LOADING FROM PICKLE ===")
-    sourceRDD = sc.pickleFile(join(path_local,'cache/two_domain/clean_data/book'))
-    targetRDD = sc.pickleFile(join(path_local,'cache/two_domain/clean_data/movie'))
-    print("=== DONE LOADING FROM PICKLE ===")
-    """
     sourceRDD = baseliner_clean_data_pipeline(
         sc, baseliner_cleansource_tool,
         path_raw_book,
@@ -101,8 +91,6 @@ if __name__ == '__main__':
     item2item_simRDD = baseliner_calculate_sim_pipeline(
         sc, baseliner_calculate_sim_tool, trainRDD)
 
-    # Write all of these to files
-
     # extender
     extendsim_tool = ExtendSim(para['extender']['extend_among_topk'])
     extendedsimRDD = extender_pipeline(
@@ -110,7 +98,7 @@ if __name__ == '__main__':
         extendsim_tool, item2item_simRDD)
 
     # generator
-    generator_tool = Generator(
+    generator_ tool = Generator(
         para['generator']['mapping_range'],
         para['generator']['private_epsilon'],
         para['baseliner']['calculate_baseline_sim_method'],
@@ -120,37 +108,11 @@ if __name__ == '__main__':
         generator_tool,
         trainRDD, extendedsimRDD, para['generator']['private_flag'])
 
-    # recommender
-    recommender_sim_tool = RecommenderSim(
-        para['recommender']['calculate_xmap_sim_method'],
-        para['recommender']['calculate_xmap_weighting'])
-    recommender_privacy_tool = RecommenderPrivacy(
-        para['recommender']['mapping_range'],
-        para['recommender']['private_epsilon'],
-        para['recommender']['private_rpo'])
-    recommender_prediction_tool = RecommenderPrediction(
-        para['recommender']['decay_alpha'],
-        para['recommender']['calculate_xmap_sim_method'])
+    ### At this point the prep is done ###
+    # Time to serialize all the things
+    path_pickle_train = join(para['init']['path_hdfs'], "cache/traindata")
+    path_pickle_test  = join(para['init']['path_hdfs'], "cache/testdata")
+    path_pickle_alterego  = join(para['init']['path_hdfs'], "cache/alterEgo")
 
-    _, _, user_based_dict_bd, item_based_dict_bd, \
-        user_info_bd, item_info_bd, \
-        alterEgo_sim = recommender_calculate_sim_pipeline(
-            sc, recommender_sim_tool, alterEgo_profile)
-
-    private_preserve_simpair = recommender_privacy_pipeline(
-        recommender_privacy_tool, alterEgo_sim,
-        para['recommender']['private_flag'])
-
-    simpair_dict_bd = sc.broadcast(private_preserve_simpair.collectAsMap())
-
-    mae = recommender_prediction_pipeline(
-        recommender_prediction_tool, recommender_sim_tool,
-        testRDD, simpair_dict_bd,
-        user_based_dict_bd, item_based_dict_bd,
-        user_info_bd, item_info_bd)
-
-    results = {
-        "mae": mae
-    }
-    write_to_disk(results, para, join(path_local, "data", "output"))
-    sc.stop()
+    testRDD.saveAsPickleFile(path_pickle_test)
+    alterEgo_profile.saveAsPickleFile(path_pickle_alterego)

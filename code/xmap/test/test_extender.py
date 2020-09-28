@@ -5,7 +5,7 @@ from os.path import join
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 
-from xmap.core.baselineSim import BaselineSim
+from xmap.core.baselinerSim import BaselinerSim
 from xmap.core.extender import ExtendSim
 from xmap.utils.assist import extender_pipeline
 
@@ -17,8 +17,13 @@ if __name__ == '__main__':
     sc = SparkContext(conf=myconf)
     sqlContext = SQLContext(sc)
 
+    # Refactor: use the actual paramaters file
+    path_local = "/opt/spark_apps/code"
+    path_para = join(path_local, "parameters.yaml")
+    para = load_parameter(path_para)
+
     # define parameters.
-    path_root = "file:/home/tlin/notebooks/data"
+    path_root = para['init']['path_hdfs']
     path_pickle_train = join(path_root, "cache/two_domain/split_data/train")
     path_pickle_test = join(path_root, "cache/two_domain/split_data/test")
     path_pickle_baseline_sim = join(
@@ -27,7 +32,9 @@ if __name__ == '__main__':
         path_root, "cache/two_domain/extend_sim/extendsim")
 
     # A demo for the class.
-    itemsim = BaselineSim(method='ad_cos', num_atleast=50)
+    itemsim = BaselinerSim(
+        para['baseliner']['calculate_baseline_sim_method'],
+        para['baseliner']['calculate_baseline_weighting'])
     extendsim = ExtendSim(top_k=10)
 
     testRDD = sc.pickleFile(path_pickle_test)
